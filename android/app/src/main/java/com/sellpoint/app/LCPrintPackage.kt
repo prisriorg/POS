@@ -1,4 +1,4 @@
-package com.rudy
+package com.sellpoint.app
 
 import android.view.View
 import com.facebook.react.ReactPackage

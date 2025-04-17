@@ -15,8 +15,7 @@ import com.facebook.soloader.SoLoader
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
-
-import com.sellpoint.app.LCPrintPackage;
+import com.sellpoint.app.LCPrintPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -27,6 +26,7 @@ class MainApplication : Application(), ReactApplication {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
             // packages.add(new MyReactNativePackage());
+            // Add the LCPrintPackage
             packages.add(LCPrintPackage())
             return packages
           }

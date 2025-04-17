@@ -1,4 +1,4 @@
-package com.rudy;
+package com.sellpoint.app;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
