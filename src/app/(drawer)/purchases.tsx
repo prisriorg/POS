@@ -13,6 +13,7 @@ import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import {
   Button,
+  Chip,
   Divider,
   IconButton,
   Menu,
@@ -26,7 +27,7 @@ import {
 import { useRouter } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { useAppSelector } from "@/src/store/reduxHook";
-import { paymentStatus, purchaseStatus } from "@/src/utils/GetData";
+import { paymentStatus, purchaseStatus, suppliers } from "@/src/utils/GetData";
 
 interface Purchase {
   id: number;
@@ -56,36 +57,37 @@ const AllPurchases = () => {
     []
   );
   const [filter, setFilter] = React.useState({
-    category: "",
-    date: "",
+    paymentStatus: "",
+    status: "",
+    suppliers: "",
     warehoues: "",
   });
   const applyFilters = () => {
     let filtered = purchases;
-
-    // if (filter.category) {
-    //   const category = expenseCat.find(
-    //     (cat: any) => cat.name === filter.category
-    //   )?.id;
-    //   if (category) {
-    //     filtered = filtered.filter(
-    //       (product: any) => product.category_id === category
-    //     );
-    //   }
-    // }
-
-    // if (filter.date) {
-    //   const date = new Date(filter.date).toISOString().split("T")[0];
-    //   filtered = filtered.filter((product: any) =>
-    //     product.created_at.startsWith(date)
-    //   );
-    // }
 
     if (filter.warehoues) {
       filtered = filtered.filter(
         (product: any) => product.warehouse_id === filter.warehoues
       );
     }
+
+    if (filter.suppliers) {
+      filtered = filtered.filter(
+        (product: any) => product.supplier_id === filter.suppliers
+      );
+    }
+
+    if (filter.status) {
+      filtered = filtered.filter((product: any) => product.status === filter.status);
+    }
+
+    if (filter.paymentStatus) {
+      filtered = filtered.filter(
+        (product: any) => product.payment_status === filter.paymentStatus
+      );
+    }
+
+
 
     setFilteredExpenses(filtered);
     setShowFilter(false);
@@ -158,7 +160,7 @@ const AllPurchases = () => {
           <View style={styles.row}>
             <Text style={styles.label}>Amount Due</Text>
             <Text style={styles.value}>
-              {item.grand_total - item.paid_amount }
+              {item.grand_total - item.paid_amount}
             </Text>
           </View>
           <Spacer10 />
@@ -268,7 +270,7 @@ const AllPurchases = () => {
               height: 50,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "black",
+              backgroundColor: Colors.colors.primary,
 
               borderRadius: "50%",
             }}
@@ -327,12 +329,13 @@ const AllPurchases = () => {
           />
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Products</Text>
+              <Text style={styles.modalTitle}>Filter Purchese</Text>
               <Pressable
                 onPress={() => {
                   setFilter({
-                    category: "",
-                    date: "",
+                    paymentStatus: "",
+                    status: "",
+                    suppliers: "",
                     warehoues: "",
                   });
                 }}
@@ -343,59 +346,71 @@ const AllPurchases = () => {
           </View>
 
           <View style={styles.filterContainer}>
-            <Text style={styles.filterTitle}>Date</Text>
-            <TextInput
-              placeholder="Select Date"
-              onChangeText={(text) => {
-                setFilter((prev) => ({
-                  ...prev,
-                  date: text,
-                }));
-              }}
-              selectionColor={"black"}
-              placeholderTextColor="black"
-              editable={false}
-              style={{
-                borderRadius: 8,
-                padding: 10,
-                width: "100%",
-                color: "black",
-                borderWidth: 1,
-                borderColor: "#bbb",
-              }}
-            />
-            <Spacer20 />
-            <Text style={styles.filterTitle}>Category</Text>
+            <Text style={styles.filterTitle}>Purchase Status</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.chipContainer}>
-                {/* {expenseCat.map((brand: any) => (
+                {purchaseStatus.map((brand: any) => (
                   <Chip
                     key={brand.id}
                     mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
-                        category: brand.value,
+                        status: brand.value,
                       }));
                     }}
                     style={[
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.category === brand.value ? "#65558F" : "#fff",
+                          filter.status === brand.value ? Colors.colors.primary : "#fff",
                       },
                     ]}
                   >
                     <Text
                       style={{
                         color:
-                          filter.category === brand.value ? "#fff" : "#000",
+                          filter.status === brand.value ? "#fff" : "#000",
                       }}
                     >
                       {brand.label}
                     </Text>
                   </Chip>
-                ))} */}
+                ))}
+              </View>
+            </ScrollView>
+            <Spacer20 />
+            <Text style={styles.filterTitle}>Payment Status</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.chipContainer}>
+                {paymentStatus.map((brand: any) => (
+                  <Chip
+                    key={brand.id}
+                    mode="outlined"
+                    onPress={() => {
+                      setFilter((prev) => ({
+                        ...prev,
+                        paymentStatus: brand.value,
+                      }));
+                    }}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor:
+                          filter.paymentStatus === brand.value ? Colors.colors.primary : "#fff",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          filter.paymentStatus === brand.value ? "#fff" : "#000",
+                      }}
+                    >
+                      {brand.label}
+                    </Text>
+                  </Chip>
+                ))}
               </View>
             </ScrollView>
             <Spacer20 />
@@ -421,6 +436,27 @@ const AllPurchases = () => {
               }}
             ></Dropdown>
             <Spacer20 />
+            <Text style={styles.filterTitle}>Supplier</Text>
+            <Dropdown
+              data={suppliers}
+              labelField="label"
+              valueField="id"
+              value={filter.suppliers}
+              placeholder="Select Supplier"
+              onChange={(item) => {
+                setFilter((prev) => ({
+                  ...prev,
+                  suppliers: item.id,
+                }));
+              }}
+              style={{
+                backgroundColor: "#ECE6F0",
+                borderRadius: 8,
+                padding: 10,
+                width: "100%",
+                marginBottom: 10,
+              }}
+            ></Dropdown>
             <Spacer20 />
             <Button
               mode="contained"
@@ -520,7 +556,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   sortContainer: {
-    backgroundColor: "#65558F",
+    backgroundColor: Colors.colors.primary,
     marginBottom: 10,
     color: "white",
   },

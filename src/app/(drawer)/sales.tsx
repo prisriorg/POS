@@ -140,8 +140,10 @@ const AllSales = () => {
             <Divider />
             <Menu.Item
               onPress={() => {
-                console.log("Details", item.id);
-                setOpenMenuId(null);
+                // router.push({
+                //   pathname: "/(drawer)/details-sales",
+                //   params: { id: item.id },
+                // });
               }}
               title="Details"
               leadingIcon={(prms) => (
@@ -228,7 +230,7 @@ const AllSales = () => {
               height: 50,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "black",
+              backgroundColor: Colors.colors.primary,
 
               borderRadius: "50%",
             }}

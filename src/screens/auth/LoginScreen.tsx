@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, Alert, Text, Image, TextInput } from "react-native";
-import { Spacer20, Spacer25, Spacer40 } from "../../utils/Spacing";
+import { Spacer10, Spacer20, Spacer25, Spacer40 } from "../../utils/Spacing";
 import { Formik } from "formik";
 
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -11,6 +11,7 @@ import { BASE_URL } from "../../utils/config";
 import { Button } from "react-native-paper";
 import { signInFormValidation } from "@/src/utils/ValidationSchema";
 import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface IValues {
   email: string;
@@ -23,8 +24,13 @@ const LoginScreen = () => {
   const visualFeedback = useVisualFeedback();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const login = async (values: IValues) => {
+    console.log(values);
     try {
       visualFeedback.showLoadingBackdrop();
       const response = await fetch(`${BASE_URL}login`, {
@@ -89,13 +95,14 @@ const LoginScreen = () => {
             errors,
           }) => (
             <View>
+              <Spacer40 />
+              <Spacer10 />
               <Image
-                source={require("../../../assets/images/logo.png")}
+                source={require("../../../assets/images/splogo.png")}
                 style={styles.image}
                 resizeMode="contain"
               />
               <Spacer20 />
-              <Spacer40 />
               <Text style={{ marginBottom: 5 }}>Username</Text>
 
               <TextInput
@@ -107,17 +114,39 @@ const LoginScreen = () => {
               />
 
               <Spacer20 />
-
               <Text style={{ marginBottom: 5 }}>Password</Text>
-
-              <TextInput
-                placeholder="Password"
-                value={values.password}
-                style={styles.input}
-                onChangeText={handleChange("password")}
-                onBlur={handleBlur("password")}
-                secureTextEntry
-              />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#FBFBFB",
+                  paddingRight: 10,
+                  borderRadius: 8,
+                  paddingHorizontal: 0,
+                }}
+              >
+                <TextInput
+                  // Set secureTextEntry prop to hide
+                  //password when showPassword is false
+                  secureTextEntry={!showPassword}
+                  value={values.password}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Enter Password"
+                  placeholderTextColor="#aaa"
+                />
+                <MaterialCommunityIcons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#aaa"
+                  style={{
+                    marginLeft: 7,
+                  }}
+                  onPress={toggleShowPassword}
+                />
+              </View>
               <Spacer20 />
 
               <Text style={{ marginBottom: 5 }}>Domain</Text>
@@ -128,15 +157,19 @@ const LoginScreen = () => {
                 onChangeText={handleChange("domain")}
                 onBlur={handleBlur("domain")}
               />
-              <Spacer20 />
 
-              <Spacer40 />
+              <Spacer20 />
+              <Text style={{ textAlign: "center", color: "red" }}>
+                {errors.email && touched.email
+                  ? errors.email
+                  : errors.password && touched.password
+                  ? errors.password
+                  : errors.domain}
+              </Text>
               <Spacer40 />
               <Button
                 mode="contained"
-                onPress={() => {
-                  handleSubmit();
-                }}
+                onPress={() => handleSubmit()}
                 style={styles.button}
               >
                 <Text
@@ -146,11 +179,8 @@ const LoginScreen = () => {
                     fontWeight: "bold",
                     textAlign: "center",
                   }}
-                
                 >
-                Login
-                
-                  
+                  Login
                 </Text>
               </Button>
             </View>
@@ -167,10 +197,11 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: "8%",
     paddingTop: 100,
+    height: "100%",
     backgroundColor: "#fff",
   },
   image: { width: 200, height: 150, alignSelf: "center" },
-  scroll: { flex: 1 },
+  scroll: { flex: 1, backgroundColor: "#fff", height: "100%", width: "100%" },
   button: {
     backgroundColor: "#090A78",
   },

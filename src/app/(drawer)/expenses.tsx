@@ -228,7 +228,7 @@ const Expenses = () => {
               height: 50,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "black",
+              backgroundColor: Colors.colors.primary,
 
               borderRadius: "50%",
             }}

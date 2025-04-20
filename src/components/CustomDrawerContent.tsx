@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { useRouter } from "expo-router";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import { MenuItem } from "./menu/items";
 import { useColorScheme } from "../hooks/useColorScheme.web";
 
@@ -42,6 +42,7 @@ export function CustomDrawerContent(props: any) {
             router.push("/(drawer)/products-inventory");
           }}
           title="Products & Inventory"
+          icon={<AntDesign name="appstore-o" size={24}/>}
         />
 
         <MenuItem
@@ -49,30 +50,57 @@ export function CustomDrawerContent(props: any) {
             router.push("/(drawer)/purchases");
           }}
           title="Purchases"
+          icon={<AntDesign name="creditcard" size={24} color="black" />}
         />
 
-        <MenuItem onPress={() => {
-          router.push("/(drawer)/sales");
-        }} title="Sales" />
+        <MenuItem
+          onPress={() => {
+            router.push("/(drawer)/sales");
+          }}
+          title="Sales"
+          icon={<AntDesign name="shoppingcart" size={24}/>}
+        />
+        <MenuItem
+          onPress={() => {
+            router.push("/(drawer)/expenses");
+          }}
+          title="Expenses"
+          icon={<AntDesign name="wallet" size={24} color="black" />}
+        />
 
-        <MenuItem onPress={togglePeople} title="People" open={peopleOpen} />
+        <MenuItem onPress={togglePeople} title="People" open={peopleOpen} 
+          icon={<SimpleLineIcons name="user" size={24} color="black" />}
+        
+        
+        />
 
         {peopleOpen && (
           <View style={styles.submenuContainer}>
-            <MenuItem onPress={() => {
-              router.push("/(drawer)/users");
-            }} title="All Users" />
-            <MenuItem onPress={() => {
-              router.push("/(drawer)/customers");
-            }} title="All Customers" />
+            <MenuItem
+              onPress={() => {
+                router.push("/(drawer)/users");
+              }}
+              title="All Users"
+              icon={<Ionicons name="people-outline" size={24} color="black" />}
+            />
+            <MenuItem
+              onPress={() => {
+                router.push("/(drawer)/customers");
+              }}
+              title="All Customers"
+              icon={<Feather name="user-plus" size={24} color="black" />}
+
+            />
           </View>
         )}
 
         <MenuItem
           onPress={() => {
-            router.push("/(drawer)/expenses");
+            // router.push("/(drawer)/expenses");
+            // router.push("/(drawer)/details-sales");
           }}
           title="Reports"
+          icon={<Ionicons name="document-text-outline" size={24} color="black" />}
         />
       </View>
     </DrawerContentScrollView>

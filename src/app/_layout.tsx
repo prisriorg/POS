@@ -6,11 +6,10 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { Provider } from "react-redux";
-import { useColorScheme } from "@/src/hooks/useColorScheme";
 import { persistor, store } from "@/src/store/store";
 import { PersistGate } from "redux-persist/integration/react";
 import VisualFeedbackComponent from "../hooks/VisualFeedback/VisualFeedbackComponent";
-import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
+import { useAppSelector } from "@/src/store/reduxHook";
 
 import { PaperProvider } from "react-native-paper";
 

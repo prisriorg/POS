@@ -11,9 +11,8 @@ export const Colors: Theme = {
     text: "#000000",
     border: "#E1E1E1",
     notification: "#FF453A",
-    
   },
-  fonts:{
+  fonts: {
     regular: {
       fontFamily: "Inter_400Regular",
       fontWeight: "400",
@@ -22,14 +21,13 @@ export const Colors: Theme = {
       fontFamily: "Inter_500Medium",
       fontWeight: "500",
     },
-    bold:{
+    bold: {
       fontFamily: "Inter_700Bold",
       fontWeight: "700",
     },
-    heavy:{
+    heavy: {
       fontFamily: "Inter_900Black",
       fontWeight: "900",
-    }
-  }
- 
+    },
+  },
 };

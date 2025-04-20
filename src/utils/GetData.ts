@@ -124,3 +124,43 @@ export const expenseAcc = [
     value: "1",
   },
 ];
+
+export const paymentStatusSales = [
+  {
+    id: 1,
+    label: "Pending",
+    value: "1",
+  },
+  {
+    id: 2,
+    label: "Due",
+    value: "2",
+  },
+  {
+    id: 3,
+    label: "Partial",
+    value: "3",
+  },
+  {
+    id: 4,
+    label: "Paid",
+    value: "4",
+  },
+];
+export const salesStatus= [
+  {
+    id: 1,
+    label: "Completed",
+    value: "1",
+  },
+  {
+    id: 2,
+    label: "Pending",
+    value: "2",
+  },
+  {
+    id: 3,
+    label: "Partial",
+    value: "3",
+  },
+]

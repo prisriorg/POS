@@ -6,6 +6,8 @@ import {
   Modal,
   FlatList,
   Image,
+  TextInput,
+  Dimensions,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 import React, { useState, useEffect } from "react";
@@ -13,13 +15,18 @@ import { Stack, useRouter } from "expo-router";
 import { EvilIcons, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/src/constants/Colors";
 import { Dropdown } from "react-native-element-dropdown";
-import { Spacer20 } from "@/src/utils/Spacing";
-import { Button, TextInput, List, Divider } from "react-native-paper";
+import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
+import { Button, List, Divider, Searchbar } from "react-native-paper";
 import { useAppSelector } from "@/src/store/reduxHook";
-import { productBarcode, productTypes } from "@/src/utils/GetData";
+import {
+  getRandomNumber,
+  productBarcode,
+  productTypes,
+} from "@/src/utils/GetData";
 import * as ImagePicker from "expo-image-picker";
 import { ScrollView } from "react-native-gesture-handler";
 import { BASE_URL } from "@/src/utils/config";
+import { ImagePickerAsset } from "expo-image-picker";
 
 interface HSCodes {
   hs_code: string;
@@ -28,8 +35,9 @@ interface HSCodes {
 
 const AddProduct = () => {
   const router = useRouter();
-  const { hscodes, brands } = useAppSelector((state) => state.home);
-
+  const { hscodes, brands, categories, taxes } = useAppSelector(
+    (state) => state.home
+  );
   const { domain, user } = useAppSelector((state) => state.auth);
   const [showHSCodes, setShowHSCodes] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -39,24 +47,13 @@ const AddProduct = () => {
   });
   const [featured, setFeatured] = useState(false);
   const [HSCodes, setHSCodes] = useState<HSCodes[]>(hscodes || []);
-  const [image, setImage] = useState<{
-    uri: string;
-    width: number;
-    height: number;
-    type: string | undefined;
-    fileName: string | null | undefined;
-  }>({
-    uri: "",
-    width: 0,
-    height: 0,
-    type: "",
-    fileName: "",
-  });
+  const [image, setImage] = useState<ImagePickerAsset>();
 
   const [formData, setFormData] = useState({
     type: "",
     productName: "",
     productCode: "",
+    promotional: false,
     hsCode: "",
     barcodeSymbology: "",
     brand: "",
@@ -74,26 +71,21 @@ const AddProduct = () => {
     isActive: false,
     description: "",
     image: null,
+    IMEI: false,
   });
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
+      mediaTypes: ["images"],
       allowsEditing: true,
       // base64: true,
-      aspect: [4, 3],
+      // aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
-      setImage({
-        uri: result.assets[0].uri,
-        width: result.assets[0].width,
-        height: result.assets[0].height,
-        type: result.assets[0].type,
-        fileName: result.assets[0].fileName,
-      });
+      setImage(result.assets[0]);
     }
   };
 
@@ -120,7 +112,7 @@ const AddProduct = () => {
     data.append("lowStockAlert", formData.lowStockAlert);
     data.append("tax_id", formData.tax);
     data.append("tax_method", formData.taxMethod);
-    data.append("image", image.uri);
+    data.append("image", JSON.stringify(image));
 
     const response = await fetch(
       `${BASE_URL}save/product?user_id=${user?.id}&tenat_id=${domain}`,
@@ -133,7 +125,7 @@ const AddProduct = () => {
       }
     );
     const result = await response.json();
-    console.log("UPload ", result);
+    console.log("Upload ", result);
     if (result.status === "success") {
       // router.back();
     }
@@ -185,7 +177,31 @@ const AddProduct = () => {
             return (
               <Pressable
                 onPress={() => {
-                  router.back();
+                  router.replace("/(drawer)/products-inventory");
+                  setFormData({
+                    promotional: false,
+                    type: "",
+                    productName: "",
+                    productCode: "",
+                    hsCode: "",
+                    barcodeSymbology: "",
+                    brand: "",
+                    category: "",
+                    unit: "",
+                    saleUnit: "",
+                    purchaseUnit: "",
+                    buyingPrice: "",
+                    sellingPrice: "",
+                    wholesalePrice: "",
+                    dailySaleObjective: "",
+                    lowStockAlert: "",
+                    tax: "",
+                    taxMethod: "inclusive",
+                    isActive: false,
+                    description: "",
+                    image: null,
+                    IMEI: false,
+                  });
                 }}
                 style={{
                   padding: 10,
@@ -193,7 +209,7 @@ const AddProduct = () => {
               >
                 <View
                   style={{
-                    backgroundColor: "#65558F",
+                    backgroundColor: Colors.colors.primary,
                     width: 40,
                     height: 40,
                     borderRadius: 20,
@@ -212,13 +228,30 @@ const AddProduct = () => {
       <ScrollView>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
           <Pressable onPress={pickImage}>
-            {image.uri ? (
+            {image?.uri ? (
               <Image
                 source={{ uri: image.uri }}
                 style={{ width: 250, height: 250 }}
               />
             ) : (
-              <EvilIcons name="image" size={250} color="black" />
+              <View
+                style={{
+                  margin: 20,
+                  borderRadius: 10,
+                  height: Dimensions.get("window").height * 0.25,
+                  width: Dimensions.get("window").height * 0.25,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderStyle: "dashed",
+                  borderWidth: 1,
+                  borderColor: "rgba(161,155,183,1)",
+                }}
+              >
+                <EvilIcons name="image" size={50} color="black" />
+                <Text style={{ fontSize: 16, color: "#000" }}>
+                  Select Image
+                </Text>
+              </View>
             )}
           </Pressable>
         </View>
@@ -234,7 +267,10 @@ const AddProduct = () => {
             data={productTypes}
             labelField="label"
             valueField="id"
-            placeholder="Select Product Type"
+            placeholderStyle={{
+              color: "#cecece",
+            }}
+            placeholder={"Select Product Type"}
             onChange={(val) => {
               setFormData(
                 (prev) => ({
@@ -253,22 +289,34 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, productName: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
           <Spacer20 />
           <Text style={styles.label}>Product Code / SKU</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Product Code / SKU"
-            onChangeText={(text) =>
-              setFormData((prev) => ({ ...prev, productCode: text }))
-            }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
-          />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Enter Product Code / SKU"
+              value={formData.productCode}
+              keyboardType="numeric"
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, productCode: text }))
+              }
+              selectionColor="lightgrey"
+            />
+            <Pressable
+              onPress={() => {
+                // Add reload logic here
+                setFormData((prev) => ({
+                  ...prev,
+                  productCode: getRandomNumber(),
+                }));
+              }}
+              style={{ marginLeft: 10 }}
+            >
+              <Ionicons name="reload" size={24} color={Colors.colors.primary} />
+            </Pressable>
+          </View>
 
           <Spacer20 />
           <Text style={styles.label}>HS Code</Text>
@@ -279,16 +327,14 @@ const AddProduct = () => {
             value={selectedHSCode.hs_code}
             editable={false}
             pointerEvents="none"
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
-          ></TextInput>
+            selectionColor="lightgrey"
+          />
 
           <Button
             mode="contained"
             style={{
               marginTop: 10,
-              backgroundColor: "#65558F",
+              backgroundColor: Colors.colors.primary,
               borderRadius: 8,
             }}
             onPress={() => setShowHSCodes(true)}
@@ -302,7 +348,8 @@ const AddProduct = () => {
               Select HS Code
             </Text>
           </Button>
-          <Spacer20 />
+
+          <Spacer10 />
 
           <Text style={styles.label}>Barcode Symbology</Text>
           <Dropdown
@@ -310,6 +357,10 @@ const AddProduct = () => {
             data={productBarcode}
             labelField="label"
             valueField="id"
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
+            value={formData.barcodeSymbology}
             placeholder="Select Barcode Symbology"
             onChange={(val) =>
               setFormData((prev) => ({ ...prev, barcodeSymbology: val }))
@@ -325,6 +376,10 @@ const AddProduct = () => {
               id: brand.id,
               label: brand.title,
             }))}
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
+            value={formData.brand}
             labelField="label"
             valueField="id"
             placeholder="Select Product Type"
@@ -334,7 +389,14 @@ const AddProduct = () => {
           <Text style={styles.label}>Category</Text>
           <Dropdown
             style={styles.input}
-            data={[]}
+            data={categories.map((category: any) => ({
+              id: category.id,
+              label: category.name,
+            }))}
+            value={formData.category}
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
             labelField="label"
             valueField="id"
             placeholder="Select Product Type"
@@ -347,8 +409,16 @@ const AddProduct = () => {
           <Text style={styles.label}>Unit</Text>
           <Dropdown
             style={styles.input}
-            data={[]}
-            value={""}
+            data={[
+              {
+                id: 1,
+                label: "piece",
+              },
+            ]}
+            value={formData.unit}
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
             labelField="label"
             valueField="id"
             placeholder="Select Product Type"
@@ -360,10 +430,18 @@ const AddProduct = () => {
           <Text style={styles.label}>Sale Unit</Text>
           <Dropdown
             style={styles.input}
-            data={[]}
-            value={""}
+            data={[
+              {
+                id: 1,
+                label: "piece",
+              },
+            ]}
+            value={formData.saleUnit}
             labelField="label"
             valueField="id"
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
             placeholder="Select Product Type"
             onChange={(val) =>
               setFormData((prev) => ({ ...prev, saleUnit: val }))
@@ -375,10 +453,18 @@ const AddProduct = () => {
           <Text style={styles.label}>Purchase Unit</Text>
           <Dropdown
             style={styles.input}
-            data={[]}
-            value={""}
+            data={[
+              {
+                id: 1,
+                label: "piece",
+              },
+            ]}
+            value={formData.purchaseUnit}
             labelField="label"
             valueField="id"
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
             placeholder="Select Product Type"
             onChange={(val) =>
               setFormData((prev) => ({ ...prev, purchaseUnit: val }))
@@ -394,9 +480,7 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, buyingPrice: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
 
           <Spacer20 />
@@ -408,9 +492,7 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, sellingPrice: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
 
           <Spacer20 />
@@ -422,9 +504,7 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, wholesalePrice: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
 
           <Spacer20 />
@@ -436,9 +516,7 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, dailySaleObjective: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
           <Spacer20 />
 
@@ -449,18 +527,23 @@ const AddProduct = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, lowStockAlert: text }))
             }
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
           <Spacer20 />
           <Text style={styles.label}>Tax</Text>
           <Dropdown
             style={styles.input}
-            data={[]}
+            data={taxes.map((tax: any) => ({
+              id: tax.id,
+              label: tax.name,
+            }))}
+            value={formData.tax}
             labelField="label"
             valueField="id"
             placeholder="Enter Tax"
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
             onChange={(val) => setFormData((prev) => ({ ...prev, tax: val }))}
           />
           <Spacer20 />
@@ -469,12 +552,16 @@ const AddProduct = () => {
           <Dropdown
             style={styles.input}
             data={[
-              { id: 1, label: "Inclusive" },
-              { id: 2, label: "Exclusive" },
+              { id: "inclusive", label: "Inclusive" },
+              { id: "exclusive", label: "Exclusive" },
             ]}
             labelField="label"
             valueField="id"
             placeholder="Select Tax Method"
+            placeholderStyle={{
+              color: "lightgrey",
+            }}
+            value={formData.taxMethod}
             onChange={(val) =>
               setFormData((prev) => ({ ...prev, taxMethod: val }))
             }
@@ -482,7 +569,6 @@ const AddProduct = () => {
 
           <Spacer20 />
 
-          <Text style={styles.label}>Is Active</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Checkbox
               style={{}}
@@ -502,30 +588,137 @@ const AddProduct = () => {
 
           <Text style={styles.label}>Description</Text>
           <TextInput
-            style={{
-              borderColor: "#ccc",
-              backgroundColor: "white",
-              borderWidth: 1,
-              borderRadius: 4,
-              paddingHorizontal: 8,
-            }}
+            style={[
+              styles.input,
+              {
+                height: 100,
+                textAlign: "left",
+                paddingTop: 10,
+                textAlignVertical: "top",
+              },
+            ]}
+            value={formData.description}
             placeholder="Enter Product Description"
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, description: text }))
             }
             multiline={true}
             numberOfLines={6}
-            textColor="#000"
-            selectionColor="#000"
-            placeholderTextColor="#000"
+            selectionColor="lightgrey"
           />
+          <Spacer20 />
+
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              style={{}}
+              value={featured}
+              onValueChange={() => setFeatured(!featured)}
+              color={featured ? "#4630EB" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>This product has variants</Text>
+          </View>
+          <Spacer20 />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              style={{}}
+              value={featured}
+              onValueChange={() => setFeatured(!featured)}
+              color={featured ? "#4630EB" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>
+              This product has different prices for different warehouses
+            </Text>
+          </View>
+          <Spacer20 />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              style={{}}
+              value={featured}
+              onValueChange={() => setFeatured(!featured)}
+              color={featured ? "#4630EB" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>
+              This product has batch and expiration date
+            </Text>
+          </View>
+          <Spacer20 />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              value={formData.IMEI}
+              onValueChange={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  IMEI: !formData.IMEI,
+                }));
+              }}
+              color={formData.IMEI ? "#4630EB" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>
+              This product has IMEI or Serial numbers
+            </Text>
+          </View>
+          <Spacer20 />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              value={formData.promotional}
+              onValueChange={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  promotional: !formData.promotional,
+                }));
+              }}
+              color={formData.promotional ? "#4630EB" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>Add Promotional Price</Text>
+          </View>
+          <Spacer20 />
+          {formData.promotional && (
+            <>
+              <Text style={styles.label}>Promotional Price</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter the price of selling the product."
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, promotionalPrice: text }))
+                }
+                selectionColor="lightgrey"
+              />
+              <Spacer20 />
+              <Text style={styles.label}>Promotion Starts</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="16-04-2025"
+                onChangeText={(text) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    promotionalPriceStart: text,
+                  }))
+                }
+                selectionColor="lightgrey"
+              />
+              <Spacer20 />
+              <Text style={styles.label}>Promotion Ends</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Choose Date"
+                onChangeText={(text) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    promotionalPriceEnd: text,
+                  }))
+                }
+                selectionColor="lightgrey"
+              />
+            </>
+          )}
+          <Spacer20 />
           <Spacer20 />
 
           <Button
             mode="contained"
             style={{
               marginTop: 10,
-              backgroundColor: "#65558F",
+              backgroundColor: Colors.colors.primary,
               borderRadius: 8,
             }}
             onPress={formSubmit}
@@ -562,15 +755,32 @@ const AddProduct = () => {
               </Pressable>
             </View>
 
-            <TextInput
-              style={styles.searchInput}
+            <Searchbar
+              style={[
+                styles.searchInput,
+                {
+                  borderRadius: 8,
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#Cecece",
+                },
+              ]}
               placeholder="Search by code or description"
               placeholderTextColor="#000"
-              textColor="#000"
-              selectionColor="#000"
-              onChangeText={setSearchText}
+              selectionColor="lightgrey"
+              onChangeText={(text) => {
+                setSearchText(text);
+                setHSCodes(
+                  hscodes.filter(
+                    (item) =>
+                      item.description
+                        .toLowerCase()
+                        .includes(text.toLowerCase()) ||
+                      item.hs_code.includes(text)
+                  )
+                );
+              }}
               value={searchText}
-              mode="outlined"
             />
 
             {HSCodes.length > 0 ? (
@@ -578,7 +788,6 @@ const AddProduct = () => {
                 data={HSCodes}
                 renderItem={renderHSCodeItem}
                 keyExtractor={(item) => item.hs_code}
-                style={styles.list}
               />
             ) : (
               <View style={styles.noResults}>
@@ -597,7 +806,6 @@ export default AddProduct;
 const styles = StyleSheet.create({
   label: {
     fontSize: 16,
-    fontWeight: "bold",
     color: Colors.colors.text,
     marginBottom: 10,
   },
@@ -605,6 +813,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: "#ccc",
     backgroundColor: "white",
+    color: "#000",
     borderWidth: 1,
     borderRadius: 4,
     paddingHorizontal: 8,
@@ -636,14 +845,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   modalTitle: {
+    flex: 1,
     fontSize: 18,
+    textAlign: "center",
     fontWeight: "bold",
+    color: Colors.colors.text,
   },
   searchInput: {
     marginBottom: 10,
-  },
-  list: {
-    marginTop: 10,
   },
   noResults: {
     padding: 20,

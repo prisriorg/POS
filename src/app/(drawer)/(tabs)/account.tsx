@@ -29,12 +29,7 @@ export default function TabTwoScreen() {
           alignItems: "center",
         }}
       >
-        <FontAwesome6
-          name="circle-user"
-          size={100}
-          color={"#fff"}
-          style={{ marginRight: 10 }}
-        />
+        <FontAwesome6 name="circle-user" size={100} color={"#fff"} />
         <Spacer10 />
         <Text
           style={{
@@ -43,7 +38,7 @@ export default function TabTwoScreen() {
             marginBottom: 8,
           }}
         >
-          {user?.name|| ""}
+          {user?.name || ""}
         </Text>
         <Text
           style={{

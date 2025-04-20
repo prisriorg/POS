@@ -142,7 +142,7 @@ const AddExpenses = () => {
               >
                 <View
                   style={{
-                    backgroundColor: "#65558F",
+                    backgroundColor: Colors.colors.primary,
                     width: 40,
                     height: 40,
                     borderRadius: 20,

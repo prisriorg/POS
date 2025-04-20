@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { HapticTab } from "@/src/components/HapticTab";
 import { Colors } from "@/src/constants/Colors";
 import { useColorScheme } from "@/src/hooks/useColorScheme";
-import { AntDesign, Feather, Octicons } from "@expo/vector-icons";
+import { AntDesign, Feather, Fontisto, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import {
   setCategories,
   setProducts,
@@ -21,6 +21,7 @@ import {
   setPurchases,
   setExpenses,
   setHSCodes,
+  setSales
 } from "@/src/store/reducers/homeReducer";
 
 import NetInfo from "@react-native-community/netinfo";
@@ -53,6 +54,7 @@ export default function TabLayout() {
     getExpenses();
     getOffline();
     getHsCodes();
+    getSales();
   }, []);
 
   const getCurrencies = async () => {
@@ -78,6 +80,40 @@ export default function TabLayout() {
           dispatch(setCurrencies(result?.currencies));
           await AsyncStorage.setItem(
             "getCurrencies",
+            JSON.stringify(result?.currencies)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
+  
+  const getSales = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const currencies = await AsyncStorage.getItem("getSales");
+      if (currencies) {
+        dispatch(setSales(JSON.parse(currencies)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}sales?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setSales(result?.sales));
+          await AsyncStorage.setItem(
+            "getSales",
             JSON.stringify(result?.currencies)
           );
         }
@@ -277,7 +313,7 @@ export default function TabLayout() {
       if (result && response.status === 200) {
         if (result.status === "success") {
           const roles: [] = result?.roles;
-          dispatch(setRoles(roles.splice(1, roles.length - 1)));
+          dispatch(setRoles(roles));
           await AsyncStorage.setItem("getRoles", JSON.stringify(roles));
         }
       }
@@ -587,9 +623,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="pos"
         options={{
+          headerShown: false,
           title: "POS",
+          headerBackgroundContainerStyle: {
+            backgroundColor: "#fff",
+          },
           tabBarIcon: ({ color }) => (
-            <Feather name="bookmark" size={24} color={color} />
+            <Fontisto name="shopping-pos-machine" size={24} color={color} />
           ),
         }}
       />
@@ -598,7 +638,7 @@ export default function TabLayout() {
         options={{
           title: "Account",
           tabBarIcon: ({ color }) => (
-            <Octicons name="bell" size={24} color={color} />
+            <MaterialCommunityIcons name="account-circle-outline" size={24} color={color} />
           ),
         }}
       />

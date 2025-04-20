@@ -128,7 +128,7 @@ const AllUsers = () => {
               )}
             />
             <Divider />
-            <Menu.Item
+            {/* <Menu.Item
               onPress={() => {
                 console.log("Details", item.id);
                 setOpenMenuId(null);
@@ -137,7 +137,7 @@ const AllUsers = () => {
               leadingIcon={(prms) => (
                 <MaterialIcons name="info" size={20} color={prms.color} />
               )}
-            />
+            /> */}
           </Menu>
         </View>
         <Spacer10 />
@@ -257,14 +257,14 @@ const AllUsers = () => {
               height: 50,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "black",
+              backgroundColor: Colors.colors.primary,
 
               borderRadius: "50%",
             }}
           >
             <Pressable
               onPress={() => {
-                router.push("/(drawer)/add-expenses");
+                router.push("/(drawer)/add-users");
               }}
               style={{
                 width: "100%",

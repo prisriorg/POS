@@ -158,23 +158,28 @@ const AllCustomers = () => {
           >
             <Menu.Item
               onPress={() => {
-                console.log("Edit item", item.id);
-                setOpenMenuId(null);
               }}
-              title="Edit"
+              title="Edit Customer"
               leadingIcon={(prms) => (
-                <MaterialIcons name="edit" size={20} color={prms.color} />
+                <MaterialIcons name="content-cut" size={20} color={prms.color} />
               )}
             />
             <Divider />
             <Menu.Item
               onPress={() => {
-                console.log("Details", item.id);
-                setOpenMenuId(null);
               }}
-              title="Details"
+              title="Add Deposit"
               leadingIcon={(prms) => (
-                <MaterialIcons name="info" size={20} color={prms.color} />
+                <MaterialIcons name="content-cut" size={20} color={prms.color} />
+              )}
+            />
+             <Menu.Item
+              onPress={() => {
+              
+              }}
+              title="edit Deposit"
+              leadingIcon={(prms) => (
+                <MaterialIcons name="content-cut" size={20} color={prms.color} />
               )}
             />
           </Menu>
@@ -232,14 +237,14 @@ const AllCustomers = () => {
               height: 50,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "black",
+              backgroundColor: Colors.colors.primary,
 
               borderRadius: "50%",
             }}
           >
             <Pressable
               onPress={() => {
-                router.push("/(drawer)/add-expenses");
+                router.push("/(drawer)/add-customers");
               }}
               style={{
                 width: "100%",

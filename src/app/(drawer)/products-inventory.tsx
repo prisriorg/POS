@@ -37,26 +37,25 @@ import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors
 
 const ProductsInventoryScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
+
+  const stoks = ["In Stock", "Low Stock", "Out of Stock"];
+  const { products, categories, brands } = useAppSelector(
+    (state) => state.home
+  );
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [filter, setFilter] = useState<{
     category: string;
     brand: string;
     stock: string;
   }>({
-    category: "",
-    brand: "",
-    stock: "",
+    category: categories[0]?.name,
+    brand: brands[0]?.title,
+    stock: stoks[0],
   });
-  const [sortBy, setSortBy] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const visualFeedback = useVisualFeedback();
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, domain } = useAppSelector((state) => state.auth);
-  const { products, categories, brands } = useAppSelector(
-    (state) => state.home
-  );
-  const [filteredProducts, setFilteredProducts] = useState([]);
 
   const applyFilters = () => {
     let filtered = products;
@@ -99,8 +98,13 @@ const ProductsInventoryScreen = () => {
 
   useEffect(() => {
     setFilteredProducts(products);
+    setFilter({
+      category: categories[0]?.name,
+      brand: brands[0]?.title,
+      stock: stoks[0],
+    });
   }, [products]);
-  
+
   const renderProductItem = ({
     item,
   }: {
@@ -110,18 +114,22 @@ const ProductsInventoryScreen = () => {
       image: string;
       price: number;
       qty: number;
+      code: string;
+      hs_code: string;
     };
   }) => {
     const isMenuOpen = openMenuId === item.id;
-
     return (
-      <Card
+      <View
         style={{
-          flex: 1,
-          margin: 8,
-          borderRadius: 10,
-          elevation: 2,
+          marginHorizontal: "2%",
+          marginVertical: "2%",
+          borderRadius: 8,
+          elevation: 0,
           backgroundColor: "#fff",
+          borderWidth: 1,
+          borderColor: "#cecece",
+          width: "48%",
         }}
       >
         <View
@@ -130,64 +138,23 @@ const ProductsInventoryScreen = () => {
             justifyContent: "space-between",
           }}
         >
-          <View
+          <Image
+            source={{
+              uri: `http://${domain}${IMAGE_BASE_URL}${item?.image}`,
+            }}
             style={{
               flex: 1,
+              height: 120,
+              borderTopLeftRadius: 6,
+              borderTopRightRadius: 6,
             }}
-          >
-            <Image
-              source={{
-                uri: `http://${domain}${IMAGE_BASE_URL}${item?.image}`,
-              }}
-              style={{
-                height: 150,
-                width: "100%",
-                borderRadius: 10,
-                backgroundColor: "#f5f5f5",
-              }}
-              resizeMode="contain"
-            />
-          </View>
-          <Menu
-            visible={isMenuOpen}
-            onDismiss={() => setOpenMenuId(null)}
-            anchor={
-              <Pressable onPress={() => setOpenMenuId(item.id)}>
-                <MaterialCommunityIcons
-                  name="dots-vertical"
-                  size={24}
-                  color="black"
-                />
-              </Pressable>
-            }
-          >
-            <Menu.Item
-              onPress={() => {
-                console.log("Edit item", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Edit"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="edit" size={20} color={prms.color} />
-              )}
-            />
-            <Divider />
-            <Menu.Item
-              onPress={() => {
-                console.log("Details", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Details"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="info" size={20} color={prms.color} />
-              )}
-            />
-          </Menu>
+            resizeMode="stretch"
+          />
         </View>
 
         <View
           style={{
-            padding: 10,
+            paddingHorizontal: 10,
           }}
         >
           <Text
@@ -199,6 +166,22 @@ const ProductsInventoryScreen = () => {
           >
             {item.name}
           </Text>
+          <Text
+            style={{
+              color: "#3D3C3C",
+              fontSize: 14,
+            }}
+          >
+            Code/SKU: {item.code}
+          </Text>
+          <Text
+            style={{
+              color: "#3D3C3C",
+              fontSize: 14,
+            }}
+          >
+            In Stock: {item.qty}
+          </Text>
 
           <View
             style={{
@@ -206,24 +189,57 @@ const ProductsInventoryScreen = () => {
               justifyContent: "space-between",
               alignItems: "center",
               marginTop: 5,
+              marginBottom: 5,
             }}
           >
             <Text
               style={{
                 fontSize: 18,
                 color: "black",
+                fontWeight: "bold",
               }}
             >
-              ₹{item.price.toFixed(2)}
+              ${item.price.toFixed(2)}
             </Text>
-            <Text
-              style={{
-                color: "black",
-              }}
-            >In Stock: {item.qty}</Text>
+
+            <Menu
+              visible={isMenuOpen}
+              onDismiss={() => setOpenMenuId(null)}
+              anchor={
+                <Pressable onPress={() => setOpenMenuId(item.id)}>
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={24}
+                    color="black"
+                  />
+                </Pressable>
+              }
+            >
+              <Menu.Item
+                onPress={() => {
+                  console.log("Edit item", item.id);
+                  setOpenMenuId(null);
+                }}
+                title="Edit"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  console.log("Details", item.id);
+                  setOpenMenuId(null);
+                }}
+                title="Details"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="info" size={20} color={prms.color} />
+                )}
+              />
+            </Menu>
           </View>
         </View>
-      </Card>
+      </View>
     );
   };
   return (
@@ -257,10 +273,9 @@ const ProductsInventoryScreen = () => {
               value={searchQuery}
               style={styles.searchBar}
               inputStyle={{ color: "black" }}
-              selectionColor={"black"}
+              selectionColor="lightgray"
               iconColor="black"
               placeholderTextColor="black"
-
               icon={() => <AntDesign name="search1" size={20} color="black" />}
               right={() => (
                 <IconButton
@@ -306,16 +321,23 @@ const ProductsInventoryScreen = () => {
         <Spacer20 />
 
         {filteredProducts.length > 0 ? (
-          <FlatList
-            data={filteredProducts}
-            renderItem={renderProductItem}
-            keyExtractor={(item) => item.id.toString()}
+          <View
             style={{
               flex: 1,
-              paddingHorizontal: 5,
+              paddingBottom: 20,
             }}
-            numColumns={2}
-          />
+          >
+            <FlatList
+              data={filteredProducts}
+              renderItem={renderProductItem}
+              keyExtractor={(item) => item.id.toString()}
+              style={{
+                paddingRight: "6%",
+                paddingLeft: "2%",
+              }}
+              numColumns={2}
+            />
+          </View>
         ) : (
           <Text
             style={{
@@ -366,7 +388,6 @@ const ProductsInventoryScreen = () => {
                 {categories.map((category: any) => (
                   <Chip
                     key={category.id}
-                    mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -378,15 +399,15 @@ const ProductsInventoryScreen = () => {
                       {
                         backgroundColor:
                           filter.category === category.name
-                            ? "#65558F"
-                            : "#fff",
+                            ? Colors.colors.primary
+                            : "#dedede",
                       },
                     ]}
                   >
                     <Text
                       style={{
                         color:
-                          filter.category === category.name ? "#fff" : "#000",
+                          filter.category === category.name ? "#fff" : "#666565",
                       }}
                     >
                       {category.name}
@@ -402,7 +423,6 @@ const ProductsInventoryScreen = () => {
                 {brands.map((brand: any) => (
                   <Chip
                     key={brand.id}
-                    mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -413,13 +433,15 @@ const ProductsInventoryScreen = () => {
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.brand === brand.title ? "#65558F" : "#fff",
+                          filter.brand === brand.title
+                            ? Colors.colors.primary
+                            : "#dedede",
                       },
                     ]}
                   >
                     <Text
                       style={{
-                        color: filter.brand === brand.title ? "#fff" : "#000",
+                        color: filter.brand === brand.title ? "#fff" : "#666565",
                       }}
                     >
                       {brand.title}
@@ -432,10 +454,10 @@ const ProductsInventoryScreen = () => {
             <Text style={styles.filterTitle}>Stock</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.chipContainer}>
-                {["In Stock", "Low Stock", "Out of Stock"].map((stock) => (
+                {stoks.map((stock) => (
                   <Chip
                     key={stock}
-                    mode="outlined"
+                    // mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -446,13 +468,15 @@ const ProductsInventoryScreen = () => {
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.stock === stock ? "#65558F" : "#fff",
+                          filter.stock === stock
+                            ? Colors.colors.primary
+                            : "#dedede",
                       },
                     ]}
                   >
                     <Text
                       style={{
-                        color: filter.stock === stock ? "#fff" : "#000",
+                        color: filter.stock === stock ? "#fff" : "#666565",
                       }}
                     >
                       {stock}
@@ -472,11 +496,15 @@ const ProductsInventoryScreen = () => {
               }}
               style={styles.sortContainer}
             >
-              <Text style={{
-                color: "white",
-                fontSize: 18,
-                fontWeight: "bold",
-              }}>Apply Filters</Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                  fontWeight: "bold",
+                }}
+              >
+                Apply Filters
+              </Text>
             </Button>
             <Spacer20 />
           </View>
@@ -489,12 +517,12 @@ const ProductsInventoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
   searchBar: {
-    elevation: 2,
-    backgroundColor: "#ECE6F0",
-    color: "#000",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#cecece",
   },
   filterContainer: {
     paddingHorizontal: 20,
@@ -502,7 +530,6 @@ const styles = StyleSheet.create({
   },
   filterTitle: {
     fontSize: 20,
-    fontWeight: "bold",
     marginBottom: 8,
     color: Colors.colors.text,
   },
@@ -516,10 +543,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   sortContainer: {
-    backgroundColor: "#65558F",
+    backgroundColor: Colors.colors.primary,
     marginBottom: 10,
     color: "white",
-
   },
   sortButtons: {
     flexDirection: "row",
@@ -557,13 +583,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   modalTitle: {
+    flex: 1,
     fontSize: 18,
+    textAlign: "center",
     fontWeight: "bold",
-    color:Colors.colors.text,
-  },
-  black:{
     color: Colors.colors.text,
-  }
+  },
+  black: {
+    color: Colors.colors.text,
+  },
 });
 
 export default ProductsInventoryScreen;

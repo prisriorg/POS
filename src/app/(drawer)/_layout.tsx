@@ -1,4 +1,5 @@
 import { CustomDrawerContent } from "@/src/components/CustomDrawerContent";
+import { Colors } from "@/src/constants/Colors";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { Drawer } from "expo-router/drawer";
 import React from "react";
@@ -14,27 +15,23 @@ export default function TabsLayout() {
         drawerStyle: {
           width: "70%",
         },
+        headerStyle: {
+          backgroundColor: Colors.colors.primary,
+        },
+        headerTitleAlign: "center",
+        headerTintColor: Colors.colors.background,
+        headerTitleStyle: {
+          fontSize: 20,
+          fontWeight: "bold",
+          textAlign: "center",
+          color: "white",
+        },
       }}
     >
       <Drawer.Screen
         name="(tabs)"
         options={{
           title: "",
-
-          headerRight: (props) => (
-            <Pressable
-              onPress={() => {
-                console.log("search");
-              }}
-            >
-              <FontAwesome6
-                name="circle-user"
-                size={24}
-                color={props.tintColor}
-                style={{ marginRight: 10 }}
-              />
-            </Pressable>
-          ),
         }}
       />
 
@@ -122,7 +119,6 @@ export default function TabsLayout() {
         options={{
           title: "All Users",
           headerShown: true,
-          headerTitleAlign: "center",
         }}
       />
       <Drawer.Screen
@@ -130,6 +126,23 @@ export default function TabsLayout() {
         options={{
           title: "Add Users",
           headerShown: true,
+        }}
+      />
+
+      <Drawer.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          headerShown: true,
+          headerTitleAlign: "center",
+        }}
+      />
+      <Drawer.Screen
+        name="pos"
+        options={{
+          title: "About",
+          headerShown: true,
+          headerTitleAlign: "center",
         }}
       />
     </Drawer>

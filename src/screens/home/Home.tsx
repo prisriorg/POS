@@ -1,4 +1,5 @@
 import { useAppSelector } from "@/src/store/reduxHook";
+import { AntDesign, Entypo, Feather, Fontisto } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
@@ -20,8 +21,111 @@ export default function HomeScreen() {
     );
     const currencyRate = selectedCurrency?.exchange_rate || 1;
     const currencySymbol = selectedCurrency?.code || "";
-    const newValue = currencySymbol + " " + value * currencyRate;
+    const newValue = value * currencyRate;
     return newValue;
+  };
+
+  const itemRenderer = (item: any) => {
+    return (
+      <View style={styles.box}>
+        <View style={{ flexDirection: "column", alignItems: "center" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+              padding: "10%",
+            }}
+          >
+            <View>
+              {item.id === 1 && (
+                <Feather
+                  name="bar-chart"
+                  size={24}
+                  color={
+                    item.id === 1
+                      ? "purple"
+                      : item.id === 2
+                      ? "orange"
+                      : item.id === 3
+                      ? "darkgreen"
+                      : "blue"
+                  }
+                />
+              )}
+              {item.id === 2 && (
+                <Fontisto
+                  name="arrow-return-left"
+                  size={24}
+                  color={
+                    item.id === 1
+                      ? "purple"
+                      : item.id === 2
+                      ? "orange"
+                      : item.id === 3
+                      ? "darkgreen"
+                      : "blue"
+                  }
+                />
+              )}
+              {item.id === 3 && (
+                <Entypo
+                  name="loop"
+                  size={30}
+                  color={
+                    item.id === 1
+                      ? "purple"
+                      : item.id === 2
+                      ? "orange"
+                      : item.id === 3
+                      ? "darkgreen"
+                      : "blue"
+                  }
+                />
+              )}
+              {item.id === 4 && (
+                <AntDesign
+                  name="Trophy"
+                  size={24}
+                  color={
+                    item.id === 1
+                      ? "purple"
+                      : item.id === 2
+                      ? "orange"
+                      : item.id === 3
+                      ? "darkgreen"
+                      : "blue"
+                  }
+                />
+              )}
+            </View>
+
+            <View style={{ flex: 1, marginLeft: 8,gap:4 }}>
+              <Text style={styles.boxTitle}>{getValue(item.value)}</Text>
+
+              <Text
+                style={[
+                  styles.boxTitle,
+                  {
+                    color:
+                      item.id === 1
+                        ? "purple"
+                        : item.id === 2
+                        ? "orange"
+                        : item.id === 3
+                        ? "darkgreen"
+                        : "blue",
+                  },
+                ]}
+              >
+                {item.name}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -93,22 +197,12 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.gridContainer}>
-        <View style={styles.box}>
-          <Text style={styles.boxTitle}>Revenue</Text>
-          <Text style={styles.boxValue}>{getValue(1000)}</Text>
-        </View>
-        <View style={styles.box}>
-          <Text style={styles.boxTitle}>Profit</Text>
-          <Text style={styles.boxValue}>{getValue(500)}</Text>
-        </View>
-        <View style={styles.box}>
-          <Text style={styles.boxTitle}>Sales Returns</Text>
-          <Text style={styles.boxValue}>{getValue(500)}</Text>
-        </View>
-        <View style={styles.box}>
-          <Text style={styles.boxTitle}>Purchases Returns</Text>
-          <Text style={styles.boxValue}>{getValue(500)}</Text>
-        </View>
+        {[
+          { id: 1, name: "Revenue", value: 500 },
+          { id: 2, name: "Sale Return", value: 20002 },
+          { id: 3, name: "Purchase Return", value: 8467 },
+          { id: 4, name: "Profit", value: 764276 },
+        ].map((item) => itemRenderer(item))}
       </View>
     </View>
   );
@@ -133,18 +227,17 @@ const styles = StyleSheet.create({
   box: {
     width: "48%",
     backgroundColor: "white",
-    padding: 10,
+    borderRadius: 6,
+    // padding: 6,
     marginBottom: 16,
-    // alignItems: "center",
   },
   boxTitle: {
     width: "100%",
     fontSize: 16,
-    margin: "5%",
+    margin: "2%",
   },
   boxValue: {
-    fontSize: 28,
-    color: "#333",
-    margin: "5%",
+    fontSize: 20,
+    margin: "2%",
   },
 });

@@ -1,28 +1,36 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Divider } from "react-native-paper";
 
 export const MenuItem = ({
   onPress,
   title,
   open,
+  icon = <MaterialCommunityIcons name="content-cut" size={24} />,
 }: {
   onPress: () => void;
   title: string;
   open?: boolean;
+  icon?: React.ReactNode;
 }) => {
   return (
     <>
       <TouchableOpacity style={styles.drawerItem} onPress={onPress}>
-        <MaterialCommunityIcons name="content-cut" size={24} />
-        <Text style={[styles.drawerItemText, {
-          fontWeight: "500",
-        }]}>{title}</Text>
-
-        <AntDesign
-          name={open ? "caretdown" : "caretright"}
-          size={12}
+        {icon}
+        <Text
+          style={[
+            styles.drawerItemText,
+            {
+              fontWeight: "500",
+            },
+          ]}
+        >
+          {title}
+        </Text>
+        <Entypo
+          name={open ? "chevron-down" : "chevron-right"}
+          size={20}
           style={styles.arrowIcon}
         />
       </TouchableOpacity>
@@ -41,7 +49,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingEnd: 8,
+    paddingStart: 8,
   },
   drawerItemText: {
     marginLeft: 16,
