@@ -7,24 +7,32 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Dropdown } from "react-native-element-dropdown";
 import { useAppSelector } from "@/src/store/reduxHook";
-import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
+import { Spacer20 } from "@/src/utils/Spacing";
 import { Button } from "react-native-paper";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { BASE_URL } from "@/src/utils/config";
-import { customerGroup } from "@/src/utils/GetData";
-
 import Checkbox from "expo-checkbox";
+import { customerGroup } from "@/src/utils/GetData";
+import AllCustomers from "./customers";
 
 const AddCustomers = () => {
   const router = useRouter();
-  const { roles, warehouses, billers } = useAppSelector((state) => state.home);
+  const { roles, warehouses, billers, customers } = useAppSelector(
+    (state) => state.home
+  );
   const { domain, user } = useAppSelector((state) => state.auth);
+  const prms = useLocalSearchParams();
   const visualFeedback = useVisualFeedback();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,6 +56,40 @@ const AddCustomers = () => {
     user: false,
   });
 
+  useFocusEffect(
+    useCallback(() => {
+      const currentUses = customers.find(
+        (user) => user.id === Number(prms?.id)
+      );
+
+      if (currentUses) {
+        setFormData({
+          name: currentUses.name || "",
+          email: currentUses.email || "",
+          password: currentUses.password || "",
+          phone_number: currentUses.phone_number || "",
+          both: currentUses.both === 1, // Default to active
+          customer_name: currentUses.customer_name || "",
+          company_name: currentUses.company_name || "",
+          tax_no: currentUses.tax_no || "",
+          address: currentUses.address || "",
+          city: currentUses.city || "",
+          state: currentUses.state || "",
+          postal_code: currentUses.postal_code || "",
+          country: currentUses.country || "",
+          role_id: currentUses.role_id || "5", // Default to customer role
+          customer_group: currentUses.customer_group || "1",
+          vat_number: currentUses.vat_number || "",
+          province: currentUses.province || "",
+          
+          user: currentUses.name ? true : false,
+        });
+      }
+
+      console.log("currentUses", currentUses);
+    }, [prms?.id, user?.id, domain, customers])
+  );
+
   // Update the handleSubmit function to handle both create and update
   const handleSubmit = async () => {
     // Validate email format
@@ -67,7 +109,7 @@ const AddCustomers = () => {
       // Create base request body
 
       // Determine URL and method based on whether we're updating or creating
-      const url = `${BASE_URL}user/save?tenant_id=${domain}&user_id=${user?.id}`;
+      const url = `${BASE_URL}user/update/${prms.id}?tenant_id=${domain}&user_id=${user?.id}`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -84,13 +126,18 @@ const AddCustomers = () => {
 
       const result = await response.json();
 
-      console.log("URL:", `${BASE_URL}user/save?tenant_id=${domain}&user_id=${user?.id}`);
-
-      console.log("Response:", JSON.stringify({
+      console.log(
+        "URL:",
+        `${BASE_URL}user/update/${prms?.id}?tenant_id=${domain}&user_id=${user?.id}`
+      );
+      console.log("Request Body:", {
         ...formData,
         both: formData.both ? 1 : 0,
         user: formData.user ? 1 : 0,
-      }));
+      });
+
+      console.log("Result:", result);
+
       if (response.ok) {
         if (result.status === "success") {
           Alert.alert("Success", "User created successfully");
@@ -124,7 +171,7 @@ const AddCustomers = () => {
     >
       <Stack.Screen
         options={{
-          title: "Add New Customer",
+          title: "Edit Customer",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -182,7 +229,7 @@ const AddCustomers = () => {
       />
       <ScrollView>
         <View style={{ padding: 20 }}>
-          <View
+          {/* <View
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -200,7 +247,7 @@ const AddCustomers = () => {
               color={formData.both ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>Both Customer and Supplier.</Text>
-          </View>
+          </View> */}
           <Text style={{ fontSize: 16, marginBottom: 5, marginTop: 10 }}>
             Customer Group <Text style={{ color: "red" }}>*</Text>
           </Text>
@@ -444,7 +491,7 @@ const AddCustomers = () => {
             style={{ marginTop: 20, backgroundColor: Colors.colors.primary }}
             labelStyle={{ color: "white", fontWeight: "bold" }}
           >
-            Add Customer
+            Save Changes
           </Button>
         </View>
       </ScrollView>

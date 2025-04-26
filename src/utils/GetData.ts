@@ -181,3 +181,13 @@ export const salesPayemnt= [
     value: "3",
   },
 ]
+
+
+
+export const customerGroup = [
+  {
+    id: 1,
+    label: "General",
+    value: "1",
+  },
+];

@@ -7,8 +7,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Dropdown } from "react-native-element-dropdown";
@@ -18,10 +23,14 @@ import { Button } from "react-native-paper";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { BASE_URL } from "@/src/utils/config";
 import Checkbox from "expo-checkbox";
+import { date } from "yup";
 
-const AddUsers = () => {
+const EditUsers = () => {
   const router = useRouter();
-  const { roles, warehouses, billers } = useAppSelector((state) => state.home);
+  const prms = useLocalSearchParams();
+  const { roles, warehouses, billers, users } = useAppSelector(
+    (state) => state.home
+  );
   const { domain, user } = useAppSelector((state) => state.auth);
   const visualFeedback = useVisualFeedback();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +52,32 @@ const AddUsers = () => {
     biller_id: "",
     role: "",
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      const currentUses = users.find((user) => user.id === Number(prms?.id));
+
+      setFormData({
+        name: currentUses?.name || "",
+        email: currentUses?.email || "",
+        password: currentUses?.password || "",
+        phoneNumber: currentUses?.phone || "",
+        active: currentUses?.is_active === 1,
+        customerName: currentUses?.customer_name || "",
+        companyName: currentUses?.company_name || "",
+        taxNo: currentUses?.tax_no || "",
+        address: currentUses?.address || "",
+        city: currentUses?.city || "",
+        state: currentUses?.state || "",
+        postalCode: currentUses?.postal_code || "",
+        country: currentUses?.country || "",
+        warehouses_id: currentUses?.warehouse_id || "",
+        biller_id: currentUses?.biller_id || "",
+        role: currentUses?.role_id || "",
+      });
+      console.log("currentUses", currentUses);
+    }, [prms?.id, user?.id, domain, users])
+  );
 
   // Update the handleSubmit function to handle both create and update
   const handleSubmit = async () => {
@@ -108,9 +143,11 @@ const AddUsers = () => {
           requestBody.biller_id = formData.biller_id.toString();
           requestBody.warehouse_id = formData.warehouses_id.toString();
         } else if (parseInt(formData.role) === 5) {
+          // Customer role
           requestBody.customer_name = formData.customerName || formData.name;
           requestBody.customer_group_id = "1";
 
+          // Optional customer fields
           if (formData.taxNo) requestBody.tax_no = formData.taxNo;
           if (formData.address) requestBody.address = formData.address;
           if (formData.city) requestBody.city = formData.city;
@@ -122,7 +159,7 @@ const AddUsers = () => {
       }
 
       // Determine URL and method based on whether we're updating or creating
-      const url = `${BASE_URL}user/save?tenant_id=${domain}&user_id=${user?.id}`;
+      const url = `${BASE_URL}user/update/${prms?.id}?tenant_id=${domain}&user_id=${user?.id}`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -140,7 +177,7 @@ const AddUsers = () => {
       const result = await response.json();
       if (response.ok) {
         if (result.status === "success") {
-          Alert.alert("Success", "User created successfully");
+          Alert.alert("Success", "User Updated successfully");
           router.push("/(drawer)/users");
           setFormData({
             name: "",
@@ -189,12 +226,11 @@ const AddUsers = () => {
     >
       <Stack.Screen
         options={{
-          title: "Add New User",
+          title: "Edit User",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
           },
-
           headerTitleStyle: {
             color: Colors.colors.text,
           },
@@ -203,6 +239,24 @@ const AddUsers = () => {
               <Pressable
                 onPress={() => {
                   router.push("/(drawer)/users");
+                  setFormData({
+                    name: "",
+                    email: "",
+                    password: "",
+                    phoneNumber: "",
+                    active: true,
+                    customerName: "",
+                    companyName: "",
+                    taxNo: "",
+                    address: "",
+                    city: "",
+                    state: "",
+                    postalCode: "",
+                    country: "",
+                    warehouses_id: "",
+                    biller_id: "",
+                    role: "",
+                  });
                 }}
                 style={{
                   padding: 10,
@@ -337,7 +391,7 @@ const AddUsers = () => {
                   label: role.name,
                 }
             )}
-            value={formData.role}
+            value={formData?.role}
             placeholder="Select Role"
             onChange={function (item: any): void {
               setFormData((prev) => ({ ...prev, role: item.value }));
@@ -443,7 +497,7 @@ const AddUsers = () => {
   );
 };
 
-export default AddUsers;
+export default EditUsers;
 
 const styles = StyleSheet.create({
   input: {

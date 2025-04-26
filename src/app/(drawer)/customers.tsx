@@ -26,6 +26,7 @@ import {
 import { useRouter } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { useAppSelector } from "@/src/store/reduxHook";
+import { customerGroup } from "@/src/utils/GetData";
 
 interface Customer {
   address: string;
@@ -65,129 +66,144 @@ const AllCustomers = () => {
     date: "",
     warehoues: "",
   });
-  const applyFilters = () => {
-    let filtered = customers;
-
-    // if (filter.category) {
-    //   const category = expenseCat.find(
-    //     (cat: any) => cat.name === filter.category
-    //   )?.id;
-    //   if (category) {
-    //     filtered = filtered.filter(
-    //       (product: any) => product.category_id === category
-    //     );
-    //   }
-    // }
-
-    // if (filter.date) {
-    //   const date = new Date(filter.date).toISOString().split("T")[0];
-    //   filtered = filtered.filter((product: any) =>
-    //     product.created_at.startsWith(date)
-    //   );
-    // }
-
-    if (filter.warehoues) {
-      filtered = filtered.filter(
-        (product: any) => product.warehouse_id === filter.warehoues
-      );
-    }
-
-    setFilteredCustomers(filtered);
-    setShowFilter(false);
-  };
 
   React.useEffect(() => {
     setFilteredCustomers(customers);
   }, [customers]);
 
-  const renderExpenseItem = ({ item }: { item: Customer }) => {
+  const renderExpenseItem = ({ item }: { item: Users }) => {
     const isMenuOpen = openMenuId === item.id;
     return (
-      <View style={styles.card}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            // alignItems: "center",
-          }}
-        >
+      <Pressable
+        onPress={() => {
+          router.push(`/(drawer)/edit-customers?id=${item.id}`);
+        }}
+      >
+        <View style={styles.card}>
           <View
             style={{
-              flex: 1,
-              flexDirection: "column",
+              flexDirection: "row",
               justifyContent: "space-between",
+              alignItems: "center",
+              paddingBottom: 6,
             }}
           >
-            <View
-              style={styles.row}
+            <Text style={styles.referenceNo}>{item.name}</Text>
+            <Menu
+              visible={isMenuOpen}
+              onDismiss={() => setOpenMenuId(null)}
+              anchor={
+                <Pressable onPress={() => setOpenMenuId(item.id)}>
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={24}
+                    color="black"
+                  />
+                </Pressable>
+              }
             >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Name</Text>
-                <Text style={styles.value}>{item.name}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Group</Text>
-                <Text style={styles.value}>
-                  {item.customer_group_id === 1 ? "General" : ""}
-                </Text>
-              </View>
+              <Menu.Item
+                onPress={() => {
+                  router.push(`/(drawer)/edit-customers?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Edit Customer"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  router.push(`/(drawer)/add-deposit?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Add Deposit"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  router.push(`/(drawer)/view-deposit?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="View Deposit"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+            </Menu>
+          </View>
+          <Divider />
+          <View
+            style={{
+              paddingTop: 6,
+            }}
+          >
+            <View style={styles.row}>
+              <Text style={styles.label}>Group</Text>
+              <Text style={styles.value}>
+                {
+                  customerGroup.find(
+                    (cust) => item.customer_group_id === cust.id
+                  )?.label
+                }
+              </Text>
             </View>
             <View style={styles.row}>
-              <View style={{ flex: 1}}>
-                <Text style={styles.label}>Company</Text>
-                <Text style={styles.value}>{item.company_name}</Text>
+              <Text style={styles.label}>Company</Text>
+              <Text style={styles.value}>{item.company_name}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.value}>{item.phone_number}</Text>
+            </View>
+            <Spacer10 />
+
+            <View style={styles.row}>
+              <View
+                style={[
+                  styles.row,
+                  {
+                    gap: 10,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    {
+                      backgroundColor:
+                        item.is_active === 1 ? "#4CAF50" : "#F44336",
+                      padding: 4,
+                      borderRadius: 20,
+                      color: "white",
+                      paddingHorizontal: 12,
+                    },
+                  ]}
+                >
+                  {item.is_active === 1 ? "Active" : "Inactive"}
+                </Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Phone N0:</Text>
-                <Text style={styles.value}>{item.phone_number}</Text>
-              </View>
+
+              {/* <Text
+                style={{
+                  fontSize: 14,
+                  color: "#666",
+                  textAlign: "right",
+                  marginBottom: 6,
+                }}
+              >
+                {new Date(item.created_at).toLocaleDateString()}
+              </Text> */}
             </View>
           </View>
-          <Menu
-            visible={isMenuOpen}
-            onDismiss={() => setOpenMenuId(null)}
-            anchor={
-              <Pressable onPress={() => setOpenMenuId(item.id)}>
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={24}
-                  color="black"
-                />
-              </Pressable>
-            }
-          >
-            <Menu.Item
-              onPress={() => {
-              }}
-              title="Edit Customer"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="content-cut" size={20} color={prms.color} />
-              )}
-            />
-            <Divider />
-            <Menu.Item
-              onPress={() => {
-              }}
-              title="Add Deposit"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="content-cut" size={20} color={prms.color} />
-              )}
-            />
-             <Menu.Item
-              onPress={() => {
-              
-              }}
-              title="edit Deposit"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="content-cut" size={20} color={prms.color} />
-              )}
-            />
-          </Menu>
         </View>
-      </View>
+      </Pressable>
     );
   };
-
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -202,7 +218,7 @@ const AllCustomers = () => {
         >
           <View style={{ flex: 1 }}>
             <Searchbar
-              placeholder="Search purchases..."
+              placeholder="Search customer..."
               onChangeText={(val) => {
                 setSearchQuery(val);
                 const filtered = customers.filter((product: any) =>
@@ -212,22 +228,11 @@ const AllCustomers = () => {
               }}
               value={searchQuery}
               style={styles.searchBar}
-              inputStyle={{ color: "black" }}
+              inputStyle={{ color: "black", paddingBottom: 10 }}
               selectionColor={"black"}
               iconColor="black"
               placeholderTextColor="black"
               icon={() => <AntDesign name="search1" size={20} color="black" />}
-              right={() => (
-                <IconButton
-                  icon="filter"
-                  size={20}
-                  onPress={() => {
-                    setShowFilter(true);
-                  }}
-                  iconColor="black"
-                  style={{ marginRight: 10 }}
-                />
-              )}
             />
           </View>
 
@@ -257,7 +262,7 @@ const AllCustomers = () => {
             </Pressable>
           </View>
         </View>
-        <Spacer20 />
+        <Spacer10 />
         {filteredCustomers.length > 0 ? (
           <FlatList
             data={filteredCustomers}
@@ -283,137 +288,6 @@ const AllCustomers = () => {
         <Spacer20 />
         <Spacer20 />
       </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showFilter}
-        onRequestClose={() => setShowFilter(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.dismissArea}
-            onPress={() => setShowFilter(false)}
-          />
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Products</Text>
-              <Pressable
-                onPress={() => {
-                  setFilter({
-                    category: "",
-                    date: "",
-                    warehoues: "",
-                  });
-                }}
-              >
-                <Text style={{ fontSize: 18, color: "#65558F" }}>Clear</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterTitle}>Date</Text>
-            <TextInput
-              placeholder="Select Date"
-              onChangeText={(text) => {
-                setFilter((prev) => ({
-                  ...prev,
-                  date: text,
-                }));
-              }}
-              selectionColor={"black"}
-              placeholderTextColor="black"
-              editable={false}
-              style={{
-                borderRadius: 8,
-                padding: 10,
-                width: "100%",
-                color: "black",
-                borderWidth: 1,
-                borderColor: "#bbb",
-              }}
-            />
-            <Spacer20 />
-            <Text style={styles.filterTitle}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.chipContainer}>
-                {/* {expenseCat.map((brand: any) => (
-                  <Chip
-                    key={brand.id}
-                    mode="outlined"
-                    onPress={() => {
-                      setFilter((prev) => ({
-                        ...prev,
-                        category: brand.value,
-                      }));
-                    }}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor:
-                          filter.category === brand.value ? "#65558F" : "#fff",
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color:
-                          filter.category === brand.value ? "#fff" : "#000",
-                      }}
-                    >
-                      {brand.label}
-                    </Text>
-                  </Chip>
-                ))} */}
-              </View>
-            </ScrollView>
-            <Spacer20 />
-            <Text style={styles.filterTitle}>Warehouse</Text>
-            <Dropdown
-              data={warehouses}
-              labelField="name"
-              valueField="id"
-              value={filter.warehoues}
-              placeholder="Select Warehouse"
-              onChange={(item) => {
-                setFilter((prev) => ({
-                  ...prev,
-                  warehoues: item.id,
-                }));
-              }}
-              style={{
-                backgroundColor: "#ECE6F0",
-                borderRadius: 8,
-                padding: 10,
-                width: "100%",
-                marginBottom: 10,
-              }}
-            ></Dropdown>
-            <Spacer20 />
-            <Spacer20 />
-            <Button
-              mode="contained"
-              onPress={() => {
-                console.log("Apply Filters", filter);
-                applyFilters();
-                setShowFilter(false);
-              }}
-              style={styles.sortContainer}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                  fontWeight: "bold",
-                }}
-              >
-                Apply Filters
-              </Text>
-            </Button>
-            <Spacer20 />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -423,15 +297,15 @@ export default AllCustomers;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 6,
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 10,
     marginHorizontal: 10,
-    padding: 16,
-    marginTop: 12,
     shadowRadius: 1,
     borderColor: "#bbb",
     borderWidth: 1,
@@ -442,7 +316,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    paddingBottom: 8,
   },
   referenceNo: {
     fontSize: 16,
@@ -457,14 +330,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    margin: 6,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
   },
   value: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#333",
   },
@@ -513,8 +385,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   searchBar: {
+    height: 50,
     elevation: 2,
-    backgroundColor: "#ECE6F0",
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#bbb",
     color: "#000",
   },
   filterContainer: {

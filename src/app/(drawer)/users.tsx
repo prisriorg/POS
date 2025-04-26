@@ -1,34 +1,27 @@
 import {
   FlatList,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
-import {
-  Button,
-  Divider,
-  IconButton,
-  Menu,
-  Searchbar,
-} from "react-native-paper";
+import { Divider, Menu, Searchbar } from "react-native-paper";
 import {
   AntDesign,
   MaterialCommunityIcons,
   MaterialIcons,
-  SimpleLineIcons,
 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { Dropdown } from "react-native-element-dropdown";
-import { useAppSelector } from "@/src/store/reduxHook";
-import { paymentStatus, purchaseStatus } from "@/src/utils/GetData";
 
+import NetInfo from "@react-native-community/netinfo";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
+import { BASE_URL } from "@/src/utils/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 interface Users {
   biller_id: number | null;
   company_name: string;
@@ -43,173 +36,176 @@ interface Users {
 }
 
 const AllUsers = () => {
-  const router = useRouter();
   const { warehouses, users, roles, billers } = useAppSelector(
     (state) => state.home
   );
+  const { user, domain } = useAppSelector((state) => state.auth);
+  const visualFeedback = useVisualFeedback();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
 
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [showFilter, setShowFilter] = React.useState(false);
   const [filteredUsers, setFilteredUsers] = React.useState<Users[]>([]);
-  const [filter, setFilter] = React.useState({
-    category: "",
-    date: "",
-    warehoues: "",
-  });
-  const applyFilters = () => {
-    let filtered = users;
-
-    // if (filter.category) {
-    //   const category = expenseCat.find(
-    //     (cat: any) => cat.name === filter.category
-    //   )?.id;
-    //   if (category) {
-    //     filtered = filtered.filter(
-    //       (product: any) => product.category_id === category
-    //     );
-    //   }
-    // }
-
-    // if (filter.date) {
-    //   const date = new Date(filter.date).toISOString().split("T")[0];
-    //   filtered = filtered.filter((product: any) =>
-    //     product.created_at.startsWith(date)
-    //   );
-    // }
-
-    if (filter.warehoues) {
-      filtered = filtered.filter(
-        (product: any) => product.warehouse_id === filter.warehoues
-      );
-    }
-
-    setFilteredUsers(filtered);
-    setShowFilter(false);
-  };
 
   React.useEffect(() => {
     setFilteredUsers(users);
+    getAllUsers();
   }, [users]);
+
+  // Use useFocusEffect to run getDetails every time the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      getAllUsers();
+    }, [user?.id, domain])
+  );
+
+  const getAllUsers = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const users = await AsyncStorage.getItem("getAllUsers");
+      if (users) {
+        dispatch(setFilteredUsers(JSON.parse(users)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}users?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setFilteredUsers(result?.roles));
+          await AsyncStorage.setItem(
+            "getAllUsers",
+            JSON.stringify(result?.roles)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
 
   const renderExpenseItem = ({ item }: { item: Users }) => {
     const isMenuOpen = openMenuId === item.id;
     return (
-      <View style={styles.card}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingBottom: 6,
-          }}
-        >
-          <Text style={styles.referenceNo}>{item.name}</Text>
-          <Menu
-            visible={isMenuOpen}
-            onDismiss={() => setOpenMenuId(null)}
-            anchor={
-              <Pressable onPress={() => setOpenMenuId(item.id)}>
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={24}
-                  color="black"
-                />
-              </Pressable>
-            }
+      <Pressable
+        onPress={() => {
+          router.push(`/(drawer)/edit-users?id=${item.id}`);
+        }}
+      >
+        <View style={styles.card}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingBottom: 6,
+            }}
           >
-            <Menu.Item
-              onPress={() => {
-                console.log("Edit item", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Edit"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="edit" size={20} color={prms.color} />
-              )}
-            />
-            <Divider />
-            {/* <Menu.Item
-              onPress={() => {
-                console.log("Details", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Details"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="info" size={20} color={prms.color} />
-              )}
-            /> */}
-          </Menu>
-        </View>
-        <Divider />
-        <View
-          style={{
-            paddingTop: 6,
-          }}
-        
-        >
-          <View style={styles.row}>
-            <Text style={styles.label}>Role</Text>
-            <Text style={styles.value}>
-              {roles.find((role: any) => role.id === item.role_id)?.name}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Branch</Text>
-            <Text style={styles.value}>
-              {billers.find((ite: any) => ite.id === item.biller_id)?.name}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Warehouse</Text>
-            <Text style={styles.value}>
-              {
-                warehouses.find((ite: any) => ite.id === item.warehouse_id)
-                  ?.name
+            <Text style={styles.referenceNo}>{item.name}</Text>
+            <Menu
+              visible={isMenuOpen}
+              onDismiss={() => setOpenMenuId(null)}
+              anchor={
+                <Pressable onPress={() => setOpenMenuId(item.id)}>
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={24}
+                    color="black"
+                  />
+                </Pressable>
               }
-            </Text>
-          </View>
-          <Spacer10 />
-
-          <View style={styles.row}>
-            <View
-              style={[
-                styles.row,
-                {
-                  gap: 10,
-                },
-              ]}
             >
-              <Text
+              <Menu.Item
+                onPress={() => {
+                  router.push(`/(drawer)/edit-users?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Edit"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+            </Menu>
+          </View>
+          <Divider />
+          <View
+            style={{
+              paddingTop: 6,
+            }}
+          >
+            <View style={styles.row}>
+              <Text style={styles.label}>Role</Text>
+              <Text style={styles.value}>
+                {roles.find((role: any) => role.id === item.role_id)?.name}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Branch</Text>
+              <Text style={styles.value}>
+                {billers.find((ite: any) => ite.id === item.biller_id)?.name}
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Warehouse</Text>
+              <Text style={styles.value}>
+                {
+                  warehouses.find((ite: any) => ite.id === item.warehouse_id)
+                    ?.name
+                }
+              </Text>
+            </View>
+            <Spacer10 />
+
+            <View style={styles.row}>
+              <View
                 style={[
-                  styles.badgeText,
+                  styles.row,
                   {
-                    backgroundColor: "#4CAF50",
-                    padding: 4,
-                    borderRadius: 20,
-                    color: "white",
-                    paddingHorizontal: 12,
+                    gap: 10,
                   },
                 ]}
               >
-                Active
+                <Text
+                  style={[
+                    styles.badgeText,
+                    {
+                      backgroundColor: "#4CAF50",
+                      padding: 4,
+                      borderRadius: 20,
+                      color: "white",
+                      paddingHorizontal: 12,
+                    },
+                  ]}
+                >
+                  Active
+                </Text>
+              </View>
+
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#666",
+                  textAlign: "right",
+                  marginBottom: 6,
+                }}
+              >
+                {new Date(item.created_at).toLocaleDateString()}
               </Text>
             </View>
-
-            <Text
-              style={{
-                fontSize: 14,
-                color: "#666",
-                textAlign: "right",
-                marginBottom: 6,
-              }}
-            >
-              {new Date(item.created_at).toLocaleDateString()}
-            </Text>
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -237,22 +233,11 @@ const AllUsers = () => {
               }}
               value={searchQuery}
               style={styles.searchBar}
-              inputStyle={{ color: "black" }}
+              inputStyle={{ color: "black", paddingBottom: 8 }}
               selectionColor={"black"}
               iconColor="black"
               placeholderTextColor="black"
               icon={() => <AntDesign name="search1" size={20} color="black" />}
-              right={() => (
-                <SimpleLineIcons
-                  name="equalizer"
-                  size={20}
-                  onPress={() => {
-                    setShowFilter(true);
-                  }}
-                  iconColor="black"
-                  style={{ marginRight: 15, transform: [{ rotate: "90deg" }] }}
-                />
-              )}
             />
           </View>
 
@@ -307,137 +292,6 @@ const AllUsers = () => {
         <Spacer20 />
         <Spacer20 />
       </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showFilter}
-        onRequestClose={() => setShowFilter(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.dismissArea}
-            onPress={() => setShowFilter(false)}
-          />
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Products</Text>
-              <Pressable
-                onPress={() => {
-                  setFilter({
-                    category: "",
-                    date: "",
-                    warehoues: "",
-                  });
-                }}
-              >
-                <Text style={{ fontSize: 18, color: "#65558F" }}>Clear</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterTitle}>Date</Text>
-            <TextInput
-              placeholder="Select Date"
-              onChangeText={(text) => {
-                setFilter((prev) => ({
-                  ...prev,
-                  date: text,
-                }));
-              }}
-              selectionColor={"black"}
-              placeholderTextColor="black"
-              editable={false}
-              style={{
-                borderRadius: 8,
-                padding: 10,
-                width: "100%",
-                color: "black",
-                borderWidth: 1,
-                borderColor: "#bbb",
-              }}
-            />
-            <Spacer20 />
-            <Text style={styles.filterTitle}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.chipContainer}>
-                {/* {expenseCat.map((brand: any) => (
-                  <Chip
-                    key={brand.id}
-                    mode="outlined"
-                    onPress={() => {
-                      setFilter((prev) => ({
-                        ...prev,
-                        category: brand.value,
-                      }));
-                    }}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor:
-                          filter.category === brand.value ? "#65558F" : "#fff",
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color:
-                          filter.category === brand.value ? "#fff" : "#000",
-                      }}
-                    >
-                      {brand.label}
-                    </Text>
-                  </Chip>
-                ))} */}
-              </View>
-            </ScrollView>
-            <Spacer20 />
-            <Text style={styles.filterTitle}>Warehouse</Text>
-            <Dropdown
-              data={warehouses}
-              labelField="name"
-              valueField="id"
-              value={filter.warehoues}
-              placeholder="Select Warehouse"
-              onChange={(item) => {
-                setFilter((prev) => ({
-                  ...prev,
-                  warehoues: item.id,
-                }));
-              }}
-              style={{
-                backgroundColor: "#ECE6F0",
-                borderRadius: 8,
-                padding: 10,
-                width: "100%",
-                marginBottom: 10,
-              }}
-            ></Dropdown>
-            <Spacer20 />
-            <Spacer20 />
-            <Button
-              mode="contained"
-              onPress={() => {
-                console.log("Apply Filters", filter);
-                applyFilters();
-                setShowFilter(false);
-              }}
-              style={styles.sortContainer}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                  fontWeight: "bold",
-                }}
-              >
-                Apply Filters
-              </Text>
-            </Button>
-            <Spacer20 />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -535,6 +389,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   searchBar: {
+    height: 50,
     elevation: 2,
     backgroundColor: "white",
     borderWidth: 1,
