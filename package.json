@@ -14,8 +14,7 @@
     "release": "cd android && ./gradlew assembleRelease",
     "build": "eas build --platform android",
     "build-ios": "eas build --platform ios",
-    "build-web": "expo build:web",
-    "dev": "expo start --dev-client"
+    "build-web": "expo build:web"
   },
   "jest": {
     "preset": "jest-expo"

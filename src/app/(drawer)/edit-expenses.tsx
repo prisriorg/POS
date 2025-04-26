@@ -20,7 +20,7 @@ import { expenseAcc, expenseCat } from "@/src/utils/GetData";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 
-const AddExpenses = () => {
+const EditExpenses = () => {
   const router = useRouter();
   const [date, setDate] = React.useState(new Date());
   const [formData, setFormData] = React.useState({
@@ -121,7 +121,7 @@ const AddExpenses = () => {
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
         options={{
-          title: "Add Expenses",
+          title: "Edit Expenses",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -414,7 +414,7 @@ const AddExpenses = () => {
   );
 };
 
-export default AddExpenses;
+export default EditExpenses;
 
 const styles = StyleSheet.create({
   input: {

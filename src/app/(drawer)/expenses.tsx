@@ -14,6 +14,7 @@ import {
   AntDesign,
   MaterialCommunityIcons,
   MaterialIcons,
+  SimpleLineIcons,
 } from "@expo/vector-icons";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import { useRouter } from "expo-router";
@@ -111,16 +112,28 @@ const Expenses = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
+            paddingBottom: 5,
           }}
         >
-          <Text style={styles.referenceNo}>{item.reference_no}</Text>
+          <Text style={styles.referenceNo}>
+            Ref No:{" "}
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "400",
+                color: "#333",
+              }}
+            >
+              {item.reference_no}{" "}
+            </Text>
+          </Text>
           <Menu
             visible={isMenuOpen}
             onDismiss={() => setOpenMenuId(null)}
             anchor={
               <Pressable onPress={() => setOpenMenuId(item.id)}>
                 <MaterialCommunityIcons
-                  name="dots-vertical"
+                  name="dots-horizontal"
                   size={24}
                   color="black"
                 />
@@ -150,18 +163,26 @@ const Expenses = () => {
             />
           </Menu>
         </View>
-        <Spacer10 />
         <Divider />
-        <Spacer10 />
-        <View>
+        <View
+          style={{
+            paddingTop: 5,
+          }}
+        >
           <View style={styles.row}>
             <Text style={styles.label}>Company:</Text>
-            <Text style={styles.value}>{item.company || "NA"}</Text>
+            <Text style={styles.value}>{item?.company}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Amount:</Text>
             <Text style={styles.value}>
               {item.amount.toFixed(2)} {item.currency}
+            </Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Category:</Text>
+            <Text style={styles.value}>
+              {item.expense_category_id === 1 ? "test (30259306)" : ""}
             </Text>
           </View>
           <Spacer10 />
@@ -170,7 +191,6 @@ const Expenses = () => {
               fontSize: 14,
               color: "#666",
               textAlign: "right",
-              marginBottom: 6,
             }}
           >
             {new Date(item.created_at).toLocaleDateString()}
@@ -188,7 +208,8 @@ const Expenses = () => {
             justifyContent: "space-evenly",
             gap: 10,
             alignItems: "center",
-            padding: 10,
+            paddingVertical: 15,
+            paddingHorizontal: 10,
           }}
         >
           <View style={{ flex: 1 }}>
@@ -202,21 +223,29 @@ const Expenses = () => {
                 setFilteredExpenses(filtered);
               }}
               value={searchQuery}
-              style={styles.searchBar}
-              inputStyle={{ color: "black" }}
+              style={{
+                width: "100%",
+                height: 53,
+
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderColor: "#bbb",
+                color: "#000",
+              }}
+              inputStyle={{ color: "black", fontSize: 14, paddingBottom: 5 }}
               selectionColor={"black"}
               iconColor="black"
               placeholderTextColor="black"
-              icon={() => <AntDesign name="search1" size={20} color="black" />}
+              icon={() => <AntDesign name="search1" size={18} color="black" />}
               right={() => (
-                <IconButton
-                  icon="filter"
-                  size={20}
+                <SimpleLineIcons
+                  name="equalizer"
+                  size={18}
                   onPress={() => {
                     setShowFilter(true);
                   }}
                   iconColor="black"
-                  style={{ marginRight: 10 }}
+                  style={{ marginRight: 15, transform: [{ rotate: "90deg" }] }}
                 />
               )}
             />
@@ -248,7 +277,6 @@ const Expenses = () => {
             </Pressable>
           </View>
         </View>
-        <Spacer20 />
         {filteredExpenses.length > 0 ? (
           <FlatList
             data={filteredExpenses}
@@ -297,7 +325,7 @@ const Expenses = () => {
                   });
                 }}
               >
-                <Text style={{ fontSize: 18, color: "#65558F" }}>Clear</Text>
+                <Text style={{ fontSize: 18, color: "#9F9494" }}>Clear</Text>
               </Pressable>
             </View>
           </View>
@@ -305,7 +333,7 @@ const Expenses = () => {
           <View style={styles.filterContainer}>
             <Text style={styles.filterTitle}>Date</Text>
             <TextInput
-              placeholder="Select Date"
+              placeholder="Choose Date"
               onChangeText={(text) => {
                 setFilter((prev) => ({
                   ...prev,
@@ -313,7 +341,7 @@ const Expenses = () => {
                 }));
               }}
               selectionColor={"black"}
-              placeholderTextColor="black"
+              placeholderTextColor="#ddd"
               editable={false}
               style={{
                 borderRadius: 8,
@@ -331,7 +359,6 @@ const Expenses = () => {
                 {expenseCat.map((brand: any) => (
                   <Chip
                     key={brand.id}
-                    mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -342,14 +369,16 @@ const Expenses = () => {
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.category === brand.value ? "#65558F" : "#fff",
+                          filter.category === brand.value
+                            ? Colors.colors.primary
+                            : "#dedede",
                       },
                     ]}
                   >
                     <Text
                       style={{
                         color:
-                          filter.category === brand.value ? "#fff" : "#000",
+                          filter.category === brand.value ? "#fff" : "#666565",
                       }}
                     >
                       {brand.label}
@@ -373,14 +402,19 @@ const Expenses = () => {
                 }));
               }}
               style={{
-                backgroundColor: "#ECE6F0",
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderColor: "#bbb",
                 borderRadius: 8,
                 padding: 10,
                 width: "100%",
                 marginBottom: 10,
               }}
+              placeholderStyle={{
+                color: "#ddd",
+                fontSize: 14,
+              }}
             ></Dropdown>
-            <Spacer20 />
             <Spacer20 />
             <Button
               mode="contained"
@@ -414,15 +448,15 @@ export default Expenses;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 6,
-    marginHorizontal: 10,
-    padding: 16,
-    marginTop: 12,
+    borderRadius: 4,
+    padding: 10,
+    marginVertical: 5,
+    marginHorizontal: 8,
     shadowRadius: 1,
     borderColor: "#bbb",
     borderWidth: 1,
@@ -436,7 +470,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   referenceNo: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#333",
   },
@@ -448,7 +482,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
   },
   label: {
     fontSize: 14,
@@ -465,8 +498,7 @@ const styles = StyleSheet.create({
   },
 
   filterTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 18,
     marginBottom: 8,
     color: Colors.colors.text,
   },
@@ -480,7 +512,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   sortContainer: {
-    backgroundColor: "#65558F",
+    backgroundColor: Colors.colors.primary,
     marginBottom: 10,
     color: "white",
   },
@@ -505,7 +537,11 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     elevation: 2,
-    backgroundColor: "#ECE6F0",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#bbb",
+    height: 53,
+
     color: "#000",
   },
   filterContainer: {
@@ -537,11 +573,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
   },
   modalTitle: {
+    flex: 1,
+    textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
     color: Colors.colors.text,
   },
   black: {

@@ -142,6 +142,7 @@ export default function TabsLayout() {
         options={{
           title: "About",
           headerShown: true,
+          
           headerTitleAlign: "center",
         }}
       />

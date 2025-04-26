@@ -22,6 +22,7 @@ import {
   AntDesign,
   MaterialCommunityIcons,
   MaterialIcons,
+  SimpleLineIcons,
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
@@ -101,6 +102,7 @@ const AllUsers = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
+            paddingBottom: 6,
           }}
         >
           <Text style={styles.referenceNo}>{item.name}</Text>
@@ -140,10 +142,13 @@ const AllUsers = () => {
             /> */}
           </Menu>
         </View>
-        <Spacer10 />
         <Divider />
-        <Spacer10 />
-        <View>
+        <View
+          style={{
+            paddingTop: 6,
+          }}
+        
+        >
           <View style={styles.row}>
             <Text style={styles.label}>Role</Text>
             <Text style={styles.value}>
@@ -222,7 +227,7 @@ const AllUsers = () => {
         >
           <View style={{ flex: 1 }}>
             <Searchbar
-              placeholder="Search purchases..."
+              placeholder="Search users..."
               onChangeText={(val) => {
                 setSearchQuery(val);
                 const filtered = users.filter((product: Users) =>
@@ -238,14 +243,14 @@ const AllUsers = () => {
               placeholderTextColor="black"
               icon={() => <AntDesign name="search1" size={20} color="black" />}
               right={() => (
-                <IconButton
-                  icon="filter"
+                <SimpleLineIcons
+                  name="equalizer"
                   size={20}
                   onPress={() => {
                     setShowFilter(true);
                   }}
                   iconColor="black"
-                  style={{ marginRight: 10 }}
+                  style={{ marginRight: 15, transform: [{ rotate: "90deg" }] }}
                 />
               )}
             />
@@ -277,7 +282,7 @@ const AllUsers = () => {
             </Pressable>
           </View>
         </View>
-        <Spacer20 />
+        <Spacer10 />
         {filteredUsers.length > 0 ? (
           <FlatList
             data={filteredUsers}
@@ -285,7 +290,6 @@ const AllUsers = () => {
             keyExtractor={(item) => item.id.toString()}
             style={{
               flex: 1,
-              paddingHorizontal: 5,
             }}
           />
         ) : (
@@ -443,15 +447,15 @@ export default AllUsers;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 6,
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 10,
     marginHorizontal: 10,
-    padding: 16,
-    marginTop: 12,
     shadowRadius: 1,
     borderColor: "#bbb",
     borderWidth: 1,
@@ -462,7 +466,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    paddingBottom: 8,
   },
   referenceNo: {
     fontSize: 16,
@@ -477,7 +480,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
   },
   label: {
     fontSize: 14,
@@ -534,7 +536,9 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     elevation: 2,
-    backgroundColor: "#ECE6F0",
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#bbb",
     color: "#000",
   },
   filterContainer: {

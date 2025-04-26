@@ -5,10 +5,10 @@ import {
   View,
   Modal,
   FlatList,
-  Image,
   TextInput,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import Checkbox from "expo-checkbox";
 import React, { useState, useEffect } from "react";
 import { Stack, useRouter } from "expo-router";
@@ -27,6 +27,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ScrollView } from "react-native-gesture-handler";
 import { BASE_URL } from "@/src/utils/config";
 import { ImagePickerAsset } from "expo-image-picker";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 
 interface HSCodes {
   hs_code: string;
@@ -35,7 +36,7 @@ interface HSCodes {
 
 const AddProduct = () => {
   const router = useRouter();
-  const { hscodes, brands, categories, taxes } = useAppSelector(
+  const { hscodes, brands, categories, taxes, warehouses } = useAppSelector(
     (state) => state.home
   );
   const { domain, user } = useAppSelector((state) => state.auth);
@@ -45,9 +46,17 @@ const AddProduct = () => {
     hs_code: "",
     description: "",
   });
+  const [productVariantsData, setProductVariantsData] = useState<any[]>([
+    {
+      name: "",
+      value: "",
+    },
+  ]);
+  const visualFeedback = useVisualFeedback();
   const [featured, setFeatured] = useState(false);
+
   const [HSCodes, setHSCodes] = useState<HSCodes[]>(hscodes || []);
-  const [image, setImage] = useState<ImagePickerAsset>();
+  const [image, setImage] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     type: "",
@@ -66,12 +75,15 @@ const AddProduct = () => {
     wholesalePrice: "",
     dailySaleObjective: "",
     lowStockAlert: "",
-    tax: "",
-    taxMethod: "inclusive",
+    tax_id: "",
+    tax_method: "inclusive",
     isActive: false,
     description: "",
-    image: null,
     IMEI: false,
+    productVariants: false,
+    promotionalPrice: false,
+    differentWarehouses: false,
+    expirationDate: false,
   });
 
   const pickImage = async () => {
@@ -80,12 +92,13 @@ const AddProduct = () => {
       mediaTypes: ["images"],
       allowsEditing: true,
       // base64: true,
-      // aspect: [4, 3],
+      aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
       setImage(result.assets[0]);
+      console.log("Image: ", result);
     }
   };
 
@@ -95,42 +108,49 @@ const AddProduct = () => {
   }, [hscodes]);
 
   const formSubmit = async () => {
-    const data = new FormData();
-    data.append("type", formData.type); // Assuming product type is 1 for now
-    data.append("name", formData.productName);
-    data.append("code", formData.productCode);
-    data.append("hs_code", selectedHSCode.hs_code);
-    data.append("barcode_symbology", formData.barcodeSymbology);
-    data.append("brand_id", formData.brand);
-    data.append("category_id", formData.category);
-    data.append("unit", formData.unit);
-    data.append("sale_unit", formData.saleUnit);
-    data.append("purchase_unit_id", formData.purchaseUnit);
-    data.append("cost", formData.buyingPrice);
-    data.append("price", formData.sellingPrice);
-    data.append("dailySaleObjective", formData.dailySaleObjective);
-    data.append("lowStockAlert", formData.lowStockAlert);
-    data.append("tax_id", formData.tax);
-    data.append("tax_method", formData.taxMethod);
-    data.append("image", JSON.stringify(image));
+    try {
+      console.log("Form Data: ", "formData");
+      const data = new FormData();
+      data.append("type", formData.type); // Assuming product type is 1 for now
+      data.append("name", formData.productName);
+      data.append("code", formData.productCode);
+      data.append("hs_code", selectedHSCode.hs_code);
+      data.append("barcode_symbology", formData.barcodeSymbology);
+      data.append("brand_id", formData.brand);
+      data.append("category_id", formData.category);
+      data.append("unit", formData.unit);
+      data.append("sale_unit", formData.saleUnit);
+      data.append("purchase_unit_id", formData.purchaseUnit);
+      data.append("cost", formData.buyingPrice);
+      data.append("price", formData.sellingPrice);
+      data.append("dailySaleObjective", formData.dailySaleObjective);
+      data.append("lowStockAlert", formData.lowStockAlert);
+      data.append("tax_id", formData.tax_id);
+      data.append("tax_method", formData.tax_method);
+      data.append("image", JSON.stringify(image));
 
-    const response = await fetch(
-      `${BASE_URL}save/product?user_id=${user?.id}&tenat_id=${domain}`,
-      {
-        method: "POST",
-        body: data,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await fetch(
+        `${BASE_URL}save/product?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      const result = await response.json();
+      console.log("Upload ", result);
+      if (result.status === "success") {
+        console.log("Product added successfully");
+
+        // router.back();
       }
-    );
-    const result = await response.json();
-    console.log("Upload ", result);
-    if (result.status === "success") {
-      // router.back();
-    }
 
-    // data.append("description", formData.description);
+      // data.append("description", formData.description);
+    } catch (error) {
+      console.log("Error: ", error);
+    }
   };
 
   // Select HS code and close modal
@@ -171,7 +191,6 @@ const AddProduct = () => {
 
           headerTitleStyle: {
             color: Colors.colors.text,
-            fontWeight: "bold",
           },
           headerLeft(props) {
             return (
@@ -201,6 +220,10 @@ const AddProduct = () => {
                     description: "",
                     image: null,
                     IMEI: false,
+                    productVariants: false,
+                    promotionalPrice: false,
+                    differentWarehouses: false,
+                    expirationDate: false,
                   });
                 }}
                 style={{
@@ -228,12 +251,18 @@ const AddProduct = () => {
       <ScrollView>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
           <Pressable onPress={pickImage}>
-            {image?.uri ? (
+            {image ? (
               <Image
                 source={{ uri: image.uri }}
-                style={{ width: 250, height: 250 }}
+                style={{
+                  height: Dimensions.get("window").height * 0.25,
+                  width: Dimensions.get("window").height * 0.25,
+                }}
               />
             ) : (
+              // <>
+              //   <Text>{JSON.stringify(image)}</Text>
+              // </>
               <View
                 style={{
                   margin: 20,
@@ -260,7 +289,9 @@ const AddProduct = () => {
             margin: 20,
           }}
         >
-          <Text style={styles.label}>Product Type</Text>
+          <Text style={styles.label}>
+            Product Type <Text style={{ color: "red" }}>*</Text>
+          </Text>
 
           <Dropdown
             style={styles.input}
@@ -281,7 +312,9 @@ const AddProduct = () => {
             }}
           />
           <Spacer20 />
-          <Text style={styles.label}>Product Name</Text>
+          <Text style={styles.label}>
+            Product Name <Text style={{ color: "red" }}>*</Text>
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -292,7 +325,9 @@ const AddProduct = () => {
             selectionColor="lightgrey"
           />
           <Spacer20 />
-          <Text style={styles.label}>Product Code / SKU</Text>
+          <Text style={styles.label}>
+            Product Code / SKU <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
@@ -319,7 +354,9 @@ const AddProduct = () => {
           </View>
 
           <Spacer20 />
-          <Text style={styles.label}>HS Code</Text>
+          <Text style={styles.label}>
+            HS Code <Text style={{ color: "red" }}>*</Text>
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -351,7 +388,9 @@ const AddProduct = () => {
 
           <Spacer10 />
 
-          <Text style={styles.label}>Barcode Symbology</Text>
+          <Text style={styles.label}>
+            Barcode Symbology <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={productBarcode}
@@ -386,7 +425,9 @@ const AddProduct = () => {
             onChange={(val) => setFormData((prev) => ({ ...prev, brand: val }))}
           />
           <Spacer20 />
-          <Text style={styles.label}>Category</Text>
+          <Text style={styles.label}>
+            Category <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={categories.map((category: any) => ({
@@ -406,7 +447,9 @@ const AddProduct = () => {
           />
 
           <Spacer20 />
-          <Text style={styles.label}>Unit</Text>
+          <Text style={styles.label}>
+            Unit <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={[
@@ -473,10 +516,13 @@ const AddProduct = () => {
 
           <Spacer20 />
 
-          <Text style={styles.label}>Buying Price</Text>
+          <Text style={styles.label}>
+            Buying Price <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <TextInput
             style={styles.input}
             placeholder="Enter Buying Price"
+            keyboardType="numeric"
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, buyingPrice: text }))
             }
@@ -485,9 +531,12 @@ const AddProduct = () => {
 
           <Spacer20 />
 
-          <Text style={styles.label}>Selling Price</Text>
+          <Text style={styles.label}>
+            Selling Price <Text style={{ color: "red" }}>*</Text>
+          </Text>
           <TextInput
             style={styles.input}
+            keyboardType="numeric"
             placeholder="Enter Selling Price"
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, sellingPrice: text }))
@@ -537,14 +586,14 @@ const AddProduct = () => {
               id: tax.id,
               label: tax.name,
             }))}
-            value={formData.tax}
+            value={formData.tax_id}
             labelField="label"
             valueField="id"
             placeholder="Enter Tax"
             placeholderStyle={{
               color: "lightgrey",
             }}
-            onChange={(val) => setFormData((prev) => ({ ...prev, tax: val }))}
+            onChange={(val) => setFormData((prev) => ({ ...prev, tax_id: val }))}
           />
           <Spacer20 />
 
@@ -561,9 +610,9 @@ const AddProduct = () => {
             placeholderStyle={{
               color: "lightgrey",
             }}
-            value={formData.taxMethod}
+            value={formData.tax_method}
             onChange={(val) =>
-              setFormData((prev) => ({ ...prev, taxMethod: val }))
+              setFormData((prev) => ({ ...prev, tax_method: val }))
             }
           />
 
@@ -574,7 +623,7 @@ const AddProduct = () => {
               style={{}}
               value={featured}
               onValueChange={() => setFeatured(!featured)}
-              color={featured ? "#4630EB" : undefined}
+              color={featured ? "#000" : undefined}
             />
             <View>
               <Text style={{ marginLeft: 8 }}>Featured</Text>
@@ -611,31 +660,202 @@ const AddProduct = () => {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Checkbox
               style={{}}
-              value={featured}
-              onValueChange={() => setFeatured(!featured)}
-              color={featured ? "#4630EB" : undefined}
+              value={formData.productVariants}
+              onValueChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  productVariants: !formData.productVariants,
+                }))
+              }
+              color={formData.productVariants ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>This product has variants</Text>
           </View>
+
+          {formData.productVariants && productVariantsData && (
+            <>
+              {productVariantsData.map((item: any, index: number) => (
+                <>
+                  <Spacer20 />
+                  <Text style={styles.label}>Option *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Size, Color, etc."
+                    onChangeText={(text) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        dailySaleObjective: text,
+                      }))
+                    }
+                    selectionColor="lightgrey"
+                  />
+                  <Spacer20 />
+                  <Text style={styles.label}>Value *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Variant value separated by comma"
+                    onChangeText={(text) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        dailySaleObjective: text,
+                      }))
+                    }
+                    selectionColor="lightgrey"
+                  />
+                </>
+              ))}
+              <Button
+                mode="contained"
+                style={{
+                  marginTop: 10,
+                  backgroundColor: Colors.colors.primary,
+                  borderRadius: 8,
+                  width: "50%",
+                }}
+                onPress={() => {
+                  setProductVariantsData((prev) => [
+                    ...prev,
+                    {
+                      name: "",
+                      value: "",
+                    },
+                  ]);
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                  }}
+                >
+                  Add Variant
+                </Text>
+              </Button>
+              <Spacer20 />
+              // create table for product variants
+              {/* <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontWeight: "bold",
+                    },
+                  ]}
+                >
+                  Option
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginRight: 10,
+                    marginBottom: 10,
+                    fontWeight: "bold",
+                  }}
+                >
+                  Value
+                </Text>
+              </View> */}
+            </>
+          )}
+
           <Spacer20 />
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Checkbox
               style={{}}
-              value={featured}
-              onValueChange={() => setFeatured(!featured)}
-              color={featured ? "#4630EB" : undefined}
+              value={formData.differentWarehouses}
+              onValueChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  differentWarehouses: !formData.differentWarehouses,
+                }))
+              }
+              color={formData.differentWarehouses ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>
               This product has different prices for different warehouses
             </Text>
           </View>
           <Spacer20 />
+          {formData.differentWarehouses && (
+            <View>
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontWeight: "bold",
+                    },
+                  ]}
+                >
+                  Warehouses
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginRight: 10,
+                    marginBottom: 10,
+                    fontWeight: "bold",
+                  }}
+                >
+                  Price
+                </Text>
+              </View>
+
+              {warehouses.map((warehouse: any) => (
+                <View
+                  key={warehouse.id}
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={styles.label}>{warehouse.name}</Text>
+                  <TextInput
+                    style={[styles.input, { width: "40%" }]}
+                    placeholder="Enter price "
+                    keyboardType="numeric"
+                    onChangeText={(text) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        dailySaleObjective: text,
+                      }));
+                    }}
+                    selectionColor="lightgrey"
+                  />
+                </View>
+              ))}
+              <Spacer20 />
+            </View>
+          )}
+
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Checkbox
               style={{}}
-              value={featured}
-              onValueChange={() => setFeatured(!featured)}
-              color={featured ? "#4630EB" : undefined}
+              value={formData.expirationDate}
+              onValueChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  expirationDate: !formData.expirationDate,
+                }))
+              }
+              color={formData.expirationDate ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>
               This product has batch and expiration date
@@ -651,11 +871,12 @@ const AddProduct = () => {
                   IMEI: !formData.IMEI,
                 }));
               }}
-              color={formData.IMEI ? "#4630EB" : undefined}
+              color={formData.IMEI ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>
               This product has IMEI or Serial numbers
             </Text>
+            <></>
           </View>
           <Spacer20 />
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -667,7 +888,7 @@ const AddProduct = () => {
                   promotional: !formData.promotional,
                 }));
               }}
-              color={formData.promotional ? "#4630EB" : undefined}
+              color={formData.promotional ? "#000" : undefined}
             />
             <Text style={{ marginLeft: 8 }}>Add Promotional Price</Text>
           </View>
@@ -772,7 +993,7 @@ const AddProduct = () => {
                 setSearchText(text);
                 setHSCodes(
                   hscodes.filter(
-                    (item) =>
+                    (item: any) =>
                       item.description
                         .toLowerCase()
                         .includes(text.toLowerCase()) ||

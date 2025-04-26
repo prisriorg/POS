@@ -21,7 +21,8 @@ import {
   setPurchases,
   setExpenses,
   setHSCodes,
-  setSales
+  setSales,
+  setDashboard
 } from "@/src/store/reducers/homeReducer";
 
 import NetInfo from "@react-native-community/netinfo";
@@ -35,7 +36,6 @@ export default function TabLayout() {
   const { user, domain } = useAppSelector((state) => state.auth);
   const visualFeedback = useVisualFeedback();
   const dispatch = useAppDispatch();
-  const colorScheme = useColorScheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -55,7 +55,42 @@ export default function TabLayout() {
     getOffline();
     getHsCodes();
     getSales();
+    getDashboard();
   }, []);
+
+  const getDashboard = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const dashboard = await AsyncStorage.getItem("getDashboard");
+      if (dashboard) {
+        dispatch(setDashboard(JSON.parse(dashboard)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}dashboard?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setDashboard(result.data));
+          await AsyncStorage.setItem(
+            "getDashboard",
+            JSON.stringify(result)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  }
 
   const getCurrencies = async () => {
     const netInfo = await NetInfo.fetch();

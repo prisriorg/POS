@@ -1,14 +1,21 @@
 import { Colors } from "@/src/constants/Colors";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppSelector } from "@/src/store/reduxHook";
+import { BASE_URL } from "@/src/utils/config";
 import {
   paymentStatus,
   paymentStatusSales,
   salesStatus,
 } from "@/src/utils/GetData";
-import { Spacer15 } from "@/src/utils/Spacing";
+import { Spacer10, Spacer15 } from "@/src/utils/Spacing";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View, Image, Pressable } from "react-native";
 import { Divider, TextInput } from "react-native-paper";
 
@@ -61,13 +68,74 @@ interface SaleDetails {
 
 const DetailsSales = () => {
   const router = useRouter();
+  const prms = useLocalSearchParams();
   const { sales, products } = useAppSelector((state) => state.home);
+  const { user, domain } = useAppSelector((state) => state.auth);
   const [sale, setSale] = useState<SaleDetails>(sales[0]);
+  const [purData, setPurData] = useState<any>(null);
+  const [currency, setCurrency] = useState<string>("USD");
+  const visualFeedback = useVisualFeedback();
+  const { currencies } = useAppSelector((state) => state.home);
+
   const item = useLocalSearchParams();
 
-  useEffect(() => {
-    setSale(sales.find((im) => im.id === Number(item.id)));
-  }, [sales, products, item]);
+  const getDetails = async (id: string) => {
+    try {
+      visualFeedback.showLoadingBackdrop();
+      return setSale(sales.find((im) => im.id === Number(id)) || sales[0]);
+      console.log(
+        "Response:",
+        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`
+      ); // Log the response object
+
+      const response = await fetch(
+        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      console.log(
+        "Response:",
+        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`
+      ); // Log the response object
+      console.log("Purchase details:", data);
+      if (response.status === 200) {
+        // Handle success
+        console.log("Purchase details:", data);
+        setCurrency(
+          currencies.find(
+            (daa) => daa.exchange_rate === data?.purchase?.exchange_rate
+          )?.code || "USD"
+        );
+        setPurData(data);
+      } else {
+        // Handle error
+        console.error("Error fetching purchase details:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching purchase details:", error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
+
+  // Use useFocusEffect to run getDetails every time the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (prms.id) {
+        getDetails(prms.id as string);
+      }
+
+      // Optional cleanup function
+      return () => {
+        // Any cleanup code here
+      };
+    }, [prms.id, user?.id, domain])
+  );
 
   return (
     <View style={styles.container}>
@@ -80,13 +148,12 @@ const DetailsSales = () => {
           },
           headerTitleStyle: {
             color: Colors.colors.text,
-            fontWeight: "bold",
           },
           headerLeft(props) {
             return (
               <Pressable
                 onPress={() => {
-                  router.back();
+                  router.push("/(drawer)/sales");
                 }}
                 style={{
                   padding: 10,
@@ -112,85 +179,134 @@ const DetailsSales = () => {
 
       <View style={styles.infoSection}>
         <Text style={styles.referenceNo}>
-          Reference No: {sale.reference_no}
+          Ref No:{" "}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "400",
+            }}
+          >
+            {sale.reference_no}
+          </Text>
         </Text>
         <Text>{new Date(sale.created_at).toDateString()}</Text>
-        <Text style={styles.time}>
-          {new Date(sale.created_at).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+        <Spacer10 />
+        <Divider />
+        <Spacer15 />
+
+        {/* {sale?.product_purchase_data?.map((data) => {
+                  return (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        width: "100%",
+                        borderBottomWidth: 1,
+                        borderBottomColor: Colors.colors.border,
+                        paddingBottom: 5,
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri: `http://${domain}${IMAGE_BASE_URL}${
+                            products[data?.product_id]?.image
+                          }`,
+                        }}
+                        style={{
+                          width: 70,
+                          height: 70,
+                        }}
+                        contentFit="cover"
+                      />
+                      <View
+                        style={{
+                          flex: 1,
+                          width: "100%",
+                          justifyContent: "center",
+                          paddingLeft: 10,
+                        }}
+                      >
+                        <Text>{products[data?.product_id]?.name}</Text>
+                        <Spacer10 />
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Text>
+                            {products[data?.product_id]?.actual_price} {currency}
+                          </Text>
+                          <Text>Qty: {data?.qty} </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })} */}
+
+        <View style={styles.summarySection}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.summaryLabel}>Amount</Text>
+            <Text style={styles.summaryValue}>{sale.total_price}</Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.summaryLabel}>Discount</Text>
+            <Text style={styles.summaryValue}>{sale.total_discount}</Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.summaryLabel}>Sale Status</Text>
+            <Text style={styles.summaryValueV}>
+              {salesStatus.find((im) => sale.sale_status === im.id)?.label}
+            </Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.summaryLabel}>Payment Method</Text>
+            <Text style={styles.summaryValueV}>Cash</Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.summaryLabel}>Payment Status</Text>
+            <Text style={styles.summaryValueV}>
+              {
+                paymentStatusSales.find((im) => sale.payment_status === im.id)
+                  ?.label
+              }
+            </Text>
+          </View>
+        </View>
+        <Spacer15 />
+        <Text style={styles.summaryLabel}>Note</Text>
+        <Text
+          style={{
+            borderWidth: 1,
+            borderColor: Colors.colors.border,
+            borderRadius: 8,
+
+            padding: 8,
+            height: 100,
+          }}
+        >
+          {sale.sale_note ? sale.sale_note : "No note added for this sale."}
         </Text>
+        <Spacer15 />
       </View>
-      <Divider />
-      <Spacer15 />
-
-      {/* <View style={styles.productSection}>
-        <View style={styles.product}>
-          <Image style={styles.productImage} source={require("image0.svg")} />
-          <Text style={styles.productName}>
-            {products.find((im) => im.id === sale.item)?.name}
-          </Text>
-          <Text style={styles.productPrice}>$0.50</Text>
-          <Text style={styles.productQty}>Qty: 2</Text>
-        </View>
-        <View style={styles.product}>
-          <Image style={styles.productImage} source={require("image1.svg")} />
-          <Text style={styles.productName}>Maputi</Text>
-          <Text style={styles.productPrice}>$0.50</Text>
-          <Text style={styles.productQty}>Qty: 2</Text>
-        </View>
-      </View> */}
-
-      <View style={styles.summarySection}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.summaryLabel}>Amount</Text>
-          <Text style={styles.summaryValue}>{sale.total_price}</Text>
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.summaryLabel}>Discount</Text>
-          <Text style={styles.summaryValue}>{sale.total_discount}</Text>
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.summaryLabel}>Sale Status</Text>
-          <Text style={styles.summaryValueV}>
-            {salesStatus.find((im) => sale.sale_status === im.id)?.label}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.summaryLabel}>Payment Method</Text>
-          <Text style={styles.summaryValueV}>Cash</Text>
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.summaryLabel}>Payment Status</Text>
-          <Text style={styles.summaryValueV}>
-            {
-              paymentStatusSales.find((im) => sale.payment_status === im.id)
-                ?.label
-            }
-          </Text>
-        </View>
-      </View>
-      <Spacer15 />
-      <Text style={styles.summaryLabel}>Note</Text>
-      <Text
-        style={{
-          borderWidth: 1,
-          borderColor: Colors.colors.border,
-          borderRadius: 8,
-          padding: 8,
-
-          backgroundColor: Colors.colors.background,
-        }}
-      >
-        {sale.sale_note ? sale.sale_note : "No note added for this sale."}
-      </Text>
-      <Spacer15 />
-
       <View style={styles.actions}>
-        <View style={[styles.button, styles.secondaryButton]}>
-          <Text style={styles.buttonText}>Refund/Cancel</Text>
-        </View>
+        <Pressable
+          onPress={() => {
+            router.push(`/(drawer)/return-sales?id=${sale.id}`);
+          }}>
+          <View style={[styles.button, styles.secondaryButton]}>
+            <Text style={styles.buttonText}>Refund/Cancel</Text>
+          </View>
+        </Pressable>
         <View style={styles.button}>
           <Text style={styles.buttonText}>Print Receipt</Text>
         </View>
@@ -234,6 +350,11 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     marginBottom: 16,
+    padding: 10,
+
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: Colors.colors.border,
   },
   referenceNo: {
     fontSize: 16,
@@ -280,12 +401,12 @@ const styles = StyleSheet.create({
   },
   summarySection: {
     padding: 16,
-    backgroundColor: Colors.colors.background,
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
   },
   summaryLabel: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "500",
     marginBottom: 4,
   },
   summaryValue: {
@@ -295,10 +416,9 @@ const styles = StyleSheet.create({
   },
   summaryValueV: {
     fontSize: 15,
-    fontWeight: "600",
-    backgroundColor: "#ccc",
-    borderWidth: 1,
-    borderColor: Colors.colors.border,
+    fontWeight: "400",
+    backgroundColor: "#ddd",
+    color: "#7b7b7b",
     paddingHorizontal: 8,
     borderRadius: 12,
     marginBottom: 8,

@@ -5,21 +5,14 @@ import {
   TextInput,
   View,
   ScrollView,
-  Modal,
-  Dimensions,
-  FlatList,
 } from "react-native";
-import React, { useEffect } from "react";
-import {
-  AntDesign,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
-import { Button, Divider, Searchbar } from "react-native-paper";
-import { BASE_URL, IMAGE_BASE_URL } from "@/src/utils/config";
+import { Button, Divider } from "react-native-paper";
+import { BASE_URL } from "@/src/utils/config";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
 import { Dropdown } from "react-native-element-dropdown";
@@ -29,16 +22,12 @@ import {
   purchaseStatus,
   suppliers,
 } from "@/src/utils/GetData";
-
-import { Image } from "expo-image";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 
-const AddPurcheses = () => {
+const EditPurcheses = () => {
   const router = useRouter();
   const [date, setDate] = React.useState(new Date());
-  const [show, setShow] = React.useState(false);
-  const [showProducts, setShowProducts] = React.useState(false);
   const [formData, setFormData] = React.useState({
     warehouse_id: 1,
     expense_category_id: 1,
@@ -55,20 +44,11 @@ const AddPurcheses = () => {
     date: new Date().toISOString().split("T")[0], // Default date
     time: `${new Date().getHours()}:${new Date().getMinutes()}`, // Default time
   });
-  const [searchText, setSearchText] = React.useState("");
 
   const visualFeedback = useVisualFeedback();
   const { user, domain } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-  const { warehouses, currencies, products } = useAppSelector(
-    (state) => state.home
-  );
-
-  const [allProduct, setAllProduct] = React.useState(products);
-
-  useEffect(() => {
-    setAllProduct(products);
-  }, [products]);
+  const { warehouses, currencies } = useAppSelector((state) => state.home);
 
   // Handle date change
   const onDateChange = (event: any, selectedDate: any) => {
@@ -116,99 +96,6 @@ const AddPurcheses = () => {
     });
   };
 
-  // product item renderer
-  const renderProductItem = ({ item }: any) => {
-    return (
-      <Pressable
-        onPress={() => {
-          setShowProducts(false);
-        }}
-        style={{
-          padding: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: "#ccc",
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            width: "100%",
-            paddingBottom: 5,
-          }}
-        >
-          <Image
-            source={{
-              uri: `http://${domain}${IMAGE_BASE_URL}${item?.image}`,
-            }}
-            style={{
-              width: 50,
-              height: 50,
-            }}
-            contentFit="cover"
-          />
-          <View
-            style={{
-              flex: 1,
-              width: "100%",
-              justifyContent: "center",
-              paddingLeft: 15,
-            }}
-          >
-            <Text
-              style={{
-                color: Colors.colors.text,
-                // fontSize: 12,
-                fontWeight: "bold",
-              }}
-            >
-              Product:{" "}
-              <Text
-                style={{
-                  fontWeight: "400",
-                }}
-              >
-                {item?.name}
-              </Text>
-            </Text>
-            <Spacer10 />
-            <Text
-              style={{
-                color: Colors.colors.text,
-                // fontSize: 12,
-                fontWeight: "bold",
-              }}
-            >
-              Code/ SKU:{" "}
-              <Text
-                style={{
-                  fontWeight: "400",
-                }}
-              >
-                {item?.code}
-              </Text>
-            </Text>
-
-            <Spacer10 />
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-
-            }}
-          >
-            <MaterialCommunityIcons
-              name="greater-than"
-              size={24}
-              color="#ccc"
-            />
-          </View>
-        </View>
-      </Pressable>
-    );
-  };
-
   const formSubmit = async () => {
     try {
       visualFeedback.showLoadingBackdrop();
@@ -244,7 +131,7 @@ const AddPurcheses = () => {
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
         options={{
-          title: "Add New Purchase",
+          title: "Add New Purchases",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -294,7 +181,7 @@ const AddPurcheses = () => {
           </Pressable>
 
           {/* Time Picker */}
-          {/* <Text
+          <Text
             style={{
               fontSize: 16,
               marginBottom: 8,
@@ -310,7 +197,7 @@ const AddPurcheses = () => {
               editable={false}
               value={formData.time}
             />
-          </Pressable> */}
+          </Pressable>
 
           <Text
             style={{
@@ -350,11 +237,11 @@ const AddPurcheses = () => {
               color: Colors.colors.text,
             }}
           >
-            Supplier
+            Suppliers
           </Text>
           <Dropdown
             style={styles.input}
-            placeholder="Select Supplier"
+            placeholder="Select account"
             data={expenseAcc}
             value={formData.supplier_id}
             labelField="label"
@@ -374,11 +261,11 @@ const AddPurcheses = () => {
               color: Colors.colors.text,
             }}
           >
-            Purchase Status
+            Purchases Status
           </Text>
           <Dropdown
             style={styles.input}
-            placeholder="Purchase status"
+            placeholder="Purchases status"
             data={purchaseStatus}
             value={formData.expense_category_id}
             labelField="label"
@@ -390,7 +277,7 @@ const AddPurcheses = () => {
             }}
           />
 
-          {/* <Text
+          <Text
             style={{
               fontSize: 16,
               marginBottom: 8,
@@ -409,7 +296,7 @@ const AddPurcheses = () => {
               });
             }}
             value={formData.full_name}
-          /> */}
+          />
           <View
             style={{
               flexDirection: "row",
@@ -483,14 +370,12 @@ const AddPurcheses = () => {
 
           <Button
             mode="outlined"
-            onPress={() => {
-              setShowProducts(true);
-            }}
+            onPress={() => {}}
             style={{
               // backgroundColor: Colors.colors.primary,
               borderColor: Colors.colors.primary,
             }}
-            labelStyle={{ color: "white",}}
+            labelStyle={{ color: "white", }}
           >
             <Text
               style={{
@@ -536,34 +421,27 @@ const AddPurcheses = () => {
               </Text>
             </View>
             {/* Example row */}
-
-            <Pressable
-              onPress={() => {
-                setShow(true);
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                padding: 8,
+                borderBottomWidth: 1,
+                borderBottomColor: "#ccc",
               }}
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  padding: 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#ccc",
-                }}
-              >
-                <Text style={{ flex: 1, textAlign: "left" }}>
-                  Example Product
+              <Text style={{ flex: 1, textAlign: "left" }}>
+                Example Product
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ textAlign: "right" }}>$100.00</Text>
+                <Text
+                  style={{ textAlign: "right", color: Colors.colors.border }}
+                >
+                  34567
                 </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ textAlign: "right" }}>$100.00</Text>
-                  <Text
-                    style={{ textAlign: "right", color: Colors.colors.border }}
-                  >
-                    34567
-                  </Text>
-                </View>
               </View>
-            </Pressable>
+            </View>
             <Divider />
 
             <View
@@ -745,7 +623,7 @@ const AddPurcheses = () => {
               $10.00
             </Text>
           </View>
-          {/* <View
+          <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
@@ -755,7 +633,7 @@ const AddPurcheses = () => {
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Change</Text>
             <Text style={{ flex: 1, textAlign: "right" }}>$10.00</Text>
-          </View> */}
+          </View>
 
           <Spacer20 />
           <Spacer20 />
@@ -781,248 +659,11 @@ const AddPurcheses = () => {
 
         <Spacer20 />
       </ScrollView>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={show}
-        onRequestClose={() => {
-          setShow(false);
-        }}
-      >
-        <ScrollView>
-          <View
-            style={{
-              flex: 1,
-              // justifyContent: "center",
-              paddingVertical: Dimensions.get("window").height / 10,
-              width: "100%",
-              height: Dimensions.get("window").height,
-              alignItems: "center",
-              backgroundColor: "rgba(0,0,0,0.5)",
-            }}
-          >
-            <View
-              style={{
-                width: "95%",
-                backgroundColor: "white",
-
-                borderRadius: 10,
-                padding: 15,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "bold",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    textAlign: "center",
-                    flex: 1,
-                    color: Colors.colors.text,
-                  }}
-                >
-                  Product Information
-                </Text>
-                <Pressable
-                  onPress={() => {
-                    setShow(false);
-                  }}
-                >
-                  <AntDesign name="close" size={20} color="black" />
-                </Pressable>
-              </View>
-              <Text
-                style={{
-                  fontSize: 16,
-                  marginBottom: 8,
-                  marginTop: 16,
-                  color: Colors.colors.text,
-                }}
-              >
-                Product Name:
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Cerevita Choco Malt"
-                onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
-                }}
-                value={formData.full_name}
-              />
-              <Text
-                style={{
-                  fontSize: 16,
-                  marginBottom: 8,
-                  marginTop: 16,
-                  color: Colors.colors.text,
-                }}
-              >
-                Product Price:
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="0"
-                onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
-                }}
-                value={formData.full_name}
-              />
-              <Text
-                style={{
-                  fontSize: 16,
-                  marginBottom: 8,
-                  marginTop: 16,
-                  color: Colors.colors.text,
-                }}
-              >
-                Product Quantity:
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="1"
-                onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
-                }}
-                value={formData.full_name}
-              />
-              <Text
-                style={{
-                  fontSize: 16,
-                  marginBottom: 8,
-                  marginTop: 16,
-                  color: Colors.colors.text,
-                }}
-              >
-                Discount
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="0.0"
-                onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
-                }}
-                value={formData.full_name}
-              />
-              <Spacer20 />
-              <Button
-                mode="contained"
-                onPress={() => {
-                  setShow(false);
-                }}
-                style={{
-                  backgroundColor: Colors.colors.primary,
-                  alignContent: "center",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-                labelStyle={{ color: "white", fontWeight: "bold" }}
-              >
-                <Text
-                  style={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                  }}
-                >
-                  Save
-                </Text>
-              </Button>
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showProducts}
-        onRequestClose={() => setShowProducts(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.dismissArea}
-            onPress={() => setShowProducts(false)}
-          />
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Product</Text>
-              <Pressable onPress={() => setShowProducts(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </Pressable>
-            </View>
-
-            <Searchbar
-              style={[
-                styles.searchInput,
-                {
-                  borderRadius: 8,
-                  backgroundColor: "#fff",
-                  borderWidth: 1,
-                  borderColor: "#Cecece",
-                },
-              ]}
-              placeholder="Search by product name or code"
-              placeholderTextColor="#000"
-              selectionColor="lightgrey"
-              onChangeText={(text) => {
-                setSearchText(text);
-                setAllProduct(
-                  products.filter(
-                    (item: any) =>
-                      item.name.toLowerCase().includes(text.toLowerCase()) ||
-                      item.code.includes(text)
-                  )
-                );
-                // setHSCodes(
-                //   hscodes.filter(
-                //     (item: any) =>
-                //       item.description
-                //         .toLowerCase()
-                //         .includes(text.toLowerCase()) ||
-                //       item.hs_code.includes(text)
-                //   )
-                // );
-              }}
-              value={searchText}
-            />
-
-            {allProduct.length > 0 ? (
-              <FlatList
-                data={allProduct}
-                renderItem={renderProductItem}
-                keyExtractor={(item) => item.id}
-              />
-            ) : (
-              <View style={styles.noResults}>
-                <Text style={styles.noResultsText}>No product found</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
 
-export default AddPurcheses;
+export default EditPurcheses;
 
 const styles = StyleSheet.create({
   input: {
@@ -1032,49 +673,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     paddingHorizontal: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContainer: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: "80%", // Takes up to 80% of screen height
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  modalTitle: {
-    flex: 1,
-    fontSize: 18,
-    textAlign: "center",
-    fontWeight: "bold",
-    color: Colors.colors.text,
-  },
-  dismissArea: {
-    flex: 1,
-  },
-  searchInput: {
-    marginBottom: 10,
-  },
-  noResults: {
-    padding: 20,
-    alignItems: "center",
-  },
-  noResultsText: {
-    color: "#888",
-    fontSize: 16,
   },
 });

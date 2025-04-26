@@ -160,7 +160,24 @@ export const salesStatus= [
   },
   {
     id: 3,
-    label: "Partial",
+    label: "Returned",
+    value: "3",
+  },
+]
+export const salesPayemnt= [
+  {
+    id: 1,
+    label: "Completed",
+    value: "1",
+  },
+  {
+    id: 2,
+    label: "Pending",
+    value: "2",
+  },
+  {
+    id: 3,
+    label: "Returned",
     value: "3",
   },
 ]

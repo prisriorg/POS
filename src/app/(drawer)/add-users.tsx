@@ -17,6 +17,7 @@ import { Spacer20 } from "@/src/utils/Spacing";
 import { Button } from "react-native-paper";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { BASE_URL } from "@/src/utils/config";
+import Checkbox from "expo-checkbox";
 
 const AddUsers = () => {
   const router = useRouter();
@@ -146,7 +147,7 @@ const AddUsers = () => {
       } else {
         Alert.alert(
           "Error",
-          result.message ||JSON.stringify(result.error||result)
+          result.message || JSON.stringify(result.error || result)
         );
         console.log("Operation failed:", result);
       }
@@ -176,13 +177,12 @@ const AddUsers = () => {
 
           headerTitleStyle: {
             color: Colors.colors.text,
-            fontWeight: "bold",
           },
           headerLeft(props) {
             return (
               <Pressable
                 onPress={() => {
-                  router.back();
+                  router.push("/(drawer)/users");
                 }}
                 style={{
                   padding: 10,
@@ -210,7 +210,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -233,7 +232,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -256,7 +254,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -279,7 +276,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -304,7 +300,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -333,7 +328,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -343,7 +337,7 @@ const AddUsers = () => {
           </Text>
           <Dropdown
             style={styles.input}
-            placeholder="Select Brnach"
+            placeholder="Select Branch"
             data={billers.map((role) => ({
               id: role.id,
               value: role.id,
@@ -359,7 +353,6 @@ const AddUsers = () => {
           <Text
             style={{
               fontSize: 16,
-              fontWeight: "bold",
               marginBottom: 8,
               marginTop: 16,
               color: Colors.colors.text,
@@ -383,13 +376,25 @@ const AddUsers = () => {
             valueField={"value"}
           />
           <Spacer20 />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Checkbox
+              style={{}}
+              value={formData.active}
+              onValueChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  active: !formData.active,
+                }))
+              }
+              color={formData.active ? "#000" : undefined}
+            />
+            <Text style={{ marginLeft: 8 }}>Active</Text>
+          </View>
+          <Spacer20 />
           <Spacer20 />
           <Button
             mode="contained"
-            onPress={() => {
-              
-                handleSubmit();
-            }}
+            onPress={handleSubmit}
             style={{
               backgroundColor: Colors.colors.primary,
             }}

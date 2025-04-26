@@ -1,127 +1,83 @@
 import { useAppSelector } from "@/src/store/reduxHook";
+import { Spacer20 } from "@/src/utils/Spacing";
 import { AntDesign, Entypo, Feather, Fontisto } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 
+// individual metrics for a timeframe
+export interface PeriodMetrics {
+  revenue: number;
+  profit: number;
+  sale: number;
+  purchase: number;
+}
+
 export default function HomeScreen() {
   const { user } = useAppSelector((state) => state.auth);
-  const { currencies, warehouses } = useAppSelector((state) => state.home);
+  const { currencies, warehouses, dashboard } = useAppSelector(
+    (state) => state.home
+  );
+  const dateList = [
+    {
+      id: "today",
+      label: "Today",
+      value: "today",
+    },
+    {
+      id: "week",
+      label: "This Week",
+      value: "week",
+    },
+    {
+      id: "month",
+      label: "This Month",
+      value: "month",
+    },
+    {
+      id: "year",
+      label: "This Year",
+      value: "year",
+    },
+  ];
+  const [dateIs, setDateIs] = useState("today");
+
+  const [dashboardData, setDashboardData] = useState(dashboard || {});
   const [warehouse, setWarehouse] = useState(warehouses[0]?.id || 1);
-  const [currency, setCurrency] = useState(currencies[0]?.id || 1);
+  const [currency, setCurrency] = useState("USD");
 
   useEffect(() => {
-    setCurrency(currencies[0]?.id);
-    setWarehouse(warehouses[0]?.id);
-  }, [user, currencies, warehouses]);
-
-  const getValue = (value: number) => {
-    const selectedCurrency = currencies?.find(
-      (item: any) => item.id === currency
-    );
-    const currencyRate = selectedCurrency?.exchange_rate || 1;
-    const currencySymbol = selectedCurrency?.code || "";
-    const newValue = value * currencyRate;
-    return newValue;
+    setCurrency(currencies[0]?.code || "USD");
+    setWarehouse(warehouses[0]?.id || 1);
+    setDashboardData(dashboard);
+  }, [user, currencies, warehouses, dashboard]);
+  const ICONS = {
+    1: { Icon: Feather, name: "bar-chart", color: "purple" },
+    2: { Icon: Fontisto, name: "arrow-return-left", color: "orange" },
+    3: { Icon: Entypo, name: "loop", color: "darkgreen" },
+    4: { Icon: AntDesign, name: "Trophy", color: "blue" },
   };
 
-  const itemRenderer = (item: any) => {
+  const itemRenderer = (item: { id: number; name: string; value: number }) => {
+      const { Icon, name: iconName, color } = ICONS[item.id] || {};
+
+    if (!Icon) return null; // In case the item.id is not 1-4
+
     return (
       <View style={styles.box}>
-        <View style={{ flexDirection: "column", alignItems: "center" }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-              padding: "10%",
-            }}
-          >
-            <View>
-              {item.id === 1 && (
-                <Feather
-                  name="bar-chart"
-                  size={24}
-                  color={
-                    item.id === 1
-                      ? "purple"
-                      : item.id === 2
-                      ? "orange"
-                      : item.id === 3
-                      ? "darkgreen"
-                      : "blue"
-                  }
-                />
-              )}
-              {item.id === 2 && (
-                <Fontisto
-                  name="arrow-return-left"
-                  size={24}
-                  color={
-                    item.id === 1
-                      ? "purple"
-                      : item.id === 2
-                      ? "orange"
-                      : item.id === 3
-                      ? "darkgreen"
-                      : "blue"
-                  }
-                />
-              )}
-              {item.id === 3 && (
-                <Entypo
-                  name="loop"
-                  size={30}
-                  color={
-                    item.id === 1
-                      ? "purple"
-                      : item.id === 2
-                      ? "orange"
-                      : item.id === 3
-                      ? "darkgreen"
-                      : "blue"
-                  }
-                />
-              )}
-              {item.id === 4 && (
-                <AntDesign
-                  name="Trophy"
-                  size={24}
-                  color={
-                    item.id === 1
-                      ? "purple"
-                      : item.id === 2
-                      ? "orange"
-                      : item.id === 3
-                      ? "darkgreen"
-                      : "blue"
-                  }
-                />
-              )}
-            </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: "10%",
+            gap: 8,
+          }}
+        >
+          <Icon name={iconName} size={24} color={color} />
 
-            <View style={{ flex: 1, marginLeft: 8,gap:4 }}>
-              <Text style={styles.boxTitle}>{getValue(item.value)}</Text>
-
-              <Text
-                style={[
-                  styles.boxTitle,
-                  {
-                    color:
-                      item.id === 1
-                        ? "purple"
-                        : item.id === 2
-                        ? "orange"
-                        : item.id === 3
-                        ? "darkgreen"
-                        : "blue",
-                  },
-                ]}
-              >
-                {item.name}
-              </Text>
-            </View>
+          <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+            <Text style={styles.boxTitle}>{item.value}</Text>
+            <Text style={[styles.boxTitle, { color }]}>{item.name}</Text>
           </View>
         </View>
       </View>
@@ -132,6 +88,28 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.titleContainer}>
         <Text style={{ fontSize: 32 }}>Welcome {user?.name || ""}</Text>
+      </View>
+
+      <Spacer20 />
+
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: "#ccc",
+          paddingHorizontal: 8,
+          backgroundColor: "white",
+          borderRadius: 4,
+        }}
+      >
+        <Dropdown
+          style={{ height: 40 }}
+          data={dateList}
+          value={dateIs}
+          labelField="label"
+          valueField="value"
+          placeholder="Select date"
+          onChange={(val) => setDateIs(val.value)}
+        />
       </View>
 
       <View
@@ -181,28 +159,34 @@ export default function HomeScreen() {
               style={{ height: 40 }}
               data={
                 currencies?.map((currency: any) => ({
-                  id: currency.id,
+                  id: currency.code,
                   label: currency.name,
-                  value: currency.id,
+                  value: currency.code,
                 })) || []
               }
               value={currency}
               labelField="label"
               valueField="value"
               placeholder="Select Currency"
-              onChange={(val) => setCurrency(parseInt(val.value))}
+              onChange={(val) => setCurrency(val.value)}
             />
           </View>
         </View>
       </View>
 
       <View style={styles.gridContainer}>
-        {[
-          { id: 1, name: "Revenue", value: 500 },
-          { id: 2, name: "Sale Return", value: 20002 },
-          { id: 3, name: "Purchase Return", value: 8467 },
-          { id: 4, name: "Profit", value: 764276 },
-        ].map((item) => itemRenderer(item))}
+        {dashboardData &&
+          dashboardData[currency] &&
+          dashboardData[currency][dateIs] &&
+          Object.entries(dashboardData[currency][dateIs] as PeriodMetrics).map(
+            ([key, value], index) => {
+              return itemRenderer({
+                id: index + 1 ,
+                name: key,
+                value: value,
+              });
+            }
+          )}
       </View>
     </View>
   );

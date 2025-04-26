@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import React from "react";
@@ -78,7 +77,9 @@ const AllPurchases = () => {
     }
 
     if (filter.status) {
-      filtered = filtered.filter((product: any) => product.status === filter.status);
+      filtered = filtered.filter(
+        (product: any) => product.status === filter.status
+      );
     }
 
     if (filter.paymentStatus) {
@@ -86,8 +87,6 @@ const AllPurchases = () => {
         (product: any) => product.payment_status === filter.paymentStatus
       );
     }
-
-
 
     setFilteredExpenses(filtered);
     setShowFilter(false);
@@ -100,124 +99,170 @@ const AllPurchases = () => {
   const renderExpenseItem = ({ item }: { item: Purchase }) => {
     const isMenuOpen = openMenuId === item.id;
     return (
-      <View style={styles.card}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text style={styles.referenceNo}>{item.reference_no}</Text>
-          <Menu
-            visible={isMenuOpen}
-            onDismiss={() => setOpenMenuId(null)}
-            anchor={
-              <Pressable onPress={() => setOpenMenuId(item.id)}>
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={24}
-                  color="black"
-                />
-              </Pressable>
-            }
+      <Pressable
+        onPress={() => {
+          router.replace(`/(drawer)/view-purchases?id=${item.id}`);
+        }}
+      >
+        <View style={styles.card}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            <Menu.Item
-              onPress={() => {
-                console.log("Edit item", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Edit"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="edit" size={20} color={prms.color} />
-              )}
-            />
-            <Divider />
-            <Menu.Item
-              onPress={() => {
-                console.log("Details", item.id);
-                setOpenMenuId(null);
-              }}
-              title="Details"
-              leadingIcon={(prms) => (
-                <MaterialIcons name="info" size={20} color={prms.color} />
-              )}
-            />
-          </Menu>
-        </View>
-        <Spacer10 />
-        <Divider />
-        <Spacer10 />
-        <View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Grand Total</Text>
-            <Text style={styles.value}>{item.grand_total}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Amount Paid</Text>
-            <Text style={styles.value}>{item.paid_amount}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Amount Due</Text>
-            <Text style={styles.value}>
-              {item.grand_total - item.paid_amount}
-            </Text>
-          </View>
-          <Spacer10 />
-
-          <View style={styles.row}>
-            <View
-              style={[
-                styles.row,
-                {
-                  gap: 10,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.badgeText,
-                  {
-                    backgroundColor: item.status === 1 ? "#4CAF50" : "#FF9800",
-                    padding: 4,
-                    borderRadius: 20,
-                    color: "white",
-                    paddingHorizontal: 12,
-                  },
-                ]}
-              >
-                {purchaseStatus.find((cat) => item.status === cat.id)?.label}
-              </Text>
-              <Text
-                style={[
-                  styles.badgeText,
-                  {
-                    backgroundColor:
-                      item.payment_status === 1 ? "#DE3163" : "#4CAF50",
-                    padding: 4,
-                    borderRadius: 20,
-                    color: "white",
-                    paddingHorizontal: 12,
-                  },
-                ]}
-              >
-                {item.payment_status === 1 ? "Due" : "Paid"}
-              </Text>
-            </View>
-
             <Text
               style={{
-                fontSize: 14,
-                color: "#666",
-                textAlign: "right",
-                marginBottom: 6,
+                fontSize: 16,
+                fontWeight: "bold",
+                color: "#333",
               }}
             >
-              {new Date(item.created_at).toLocaleDateString()}
+              Ref No:{" "}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "400",
+                  color: "#333",
+                }}
+              >
+                {item.reference_no}
+              </Text>
             </Text>
+            <Menu
+              visible={isMenuOpen}
+              onDismiss={() => setOpenMenuId(null)}
+              anchor={
+                <Pressable onPress={() => setOpenMenuId(item.id)}>
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={24}
+                    color="black"
+                  />
+                </Pressable>
+              }
+            >
+              <Menu.Item
+                onPress={() => {
+                  router.replace(`/(drawer)/edit-purcheses?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Edit"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  router.replace(`/(drawer)/add-payment?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Add Payment"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  router.replace(`/(drawer)/view-payment?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="View Payment"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                )}
+              />
+              <Divider />
+
+              <Menu.Item
+                onPress={() => {
+                  router.replace(`/(drawer)/view-purchases?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                title="Details"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="info" size={20} color={prms.color} />
+                )}
+              />
+            </Menu>
+          </View>
+          <Spacer10 />
+          <Divider />
+          <Spacer10 />
+          <View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Grand Total</Text>
+              <Text style={styles.value}>{item.grand_total}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Amount Paid</Text>
+              <Text style={styles.value}>{item.paid_amount}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Amount Due</Text>
+              <Text style={styles.value}>
+                {(item.grand_total - item.paid_amount).toFixed(2)}
+              </Text>
+            </View>
+            <Spacer10 />
+
+            <View style={styles.row}>
+              <View
+                style={[
+                  styles.row,
+                  {
+                    gap: 10,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    {
+                      backgroundColor:
+                        item.status === 1 ? "#4CAF50" : "#FF9800",
+                      padding: 4,
+                      borderRadius: 20,
+                      color: "white",
+                      paddingHorizontal: 12,
+                    },
+                  ]}
+                >
+                  {purchaseStatus.find((cat) => item.status === cat.id)?.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.badgeText,
+                    {
+                      backgroundColor:
+                        item.payment_status === 1 ? "#DE3163" : "#4CAF50",
+                      padding: 4,
+                      borderRadius: 20,
+                      color: "white",
+                      paddingHorizontal: 12,
+                    },
+                  ]}
+                >
+                  {item.payment_status === 1 ? "Due" : "Paid"}
+                </Text>
+              </View>
+
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#666",
+                  textAlign: "right",
+                }}
+              >
+                {new Date(item.created_at).toLocaleDateString()}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -363,14 +408,15 @@ const AllPurchases = () => {
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.status === brand.value ? Colors.colors.primary : "#fff",
+                          filter.status === brand.value
+                            ? Colors.colors.primary
+                            : "#fff",
                       },
                     ]}
                   >
                     <Text
                       style={{
-                        color:
-                          filter.status === brand.value ? "#fff" : "#000",
+                        color: filter.status === brand.value ? "#fff" : "#000",
                       }}
                     >
                       {brand.label}
@@ -397,14 +443,18 @@ const AllPurchases = () => {
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.paymentStatus === brand.value ? Colors.colors.primary : "#fff",
+                          filter.paymentStatus === brand.value
+                            ? Colors.colors.primary
+                            : "#fff",
                       },
                     ]}
                   >
                     <Text
                       style={{
                         color:
-                          filter.paymentStatus === brand.value ? "#fff" : "#000",
+                          filter.paymentStatus === brand.value
+                            ? "#fff"
+                            : "#000",
                       }}
                     >
                       {brand.label}
@@ -497,7 +547,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 6,
     marginHorizontal: 10,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     marginTop: 12,
     shadowRadius: 1,
     borderColor: "#bbb",
@@ -509,7 +560,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    paddingBottom: 8,
   },
   referenceNo: {
     fontSize: 16,
@@ -581,7 +631,9 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     elevation: 2,
-    backgroundColor: "#ECE6F0",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
     color: "#000",
   },
   filterContainer: {
