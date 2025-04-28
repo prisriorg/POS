@@ -20,6 +20,7 @@ import {
 } from "react-native-paper";
 import {
   AntDesign,
+  FontAwesome,
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
@@ -90,6 +91,11 @@ const AllCustomers = () => {
           >
             <Text style={styles.referenceNo}>{item.name}</Text>
             <Menu
+              style={{
+                backgroundColor: "#fff",
+                
+              }}
+            
               visible={isMenuOpen}
               onDismiss={() => setOpenMenuId(null)}
               anchor={
@@ -103,35 +109,44 @@ const AllCustomers = () => {
               }
             >
               <Menu.Item
+                style={{
+                  backgroundColor: "#fff",
+                }}
                 onPress={() => {
                   router.push(`/(drawer)/edit-customers?id=${item.id}`);
                   setOpenMenuId(null);
                 }}
                 title="Edit Customer"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                  <MaterialIcons name="edit" size={22} color={prms.color} />
                 )}
               />
               <Divider />
               <Menu.Item
+                style={{
+                  backgroundColor: "#fff",
+                }}
                 onPress={() => {
                   router.push(`/(drawer)/add-deposit?id=${item.id}`);
                   setOpenMenuId(null);
                 }}
                 title="Add Deposit"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                  <AntDesign name="plus" size={22} color={prms.color} />
                 )}
               />
               <Divider />
               <Menu.Item
+                style={{
+                  backgroundColor: "#fff",
+                }}
                 onPress={() => {
                   router.push(`/(drawer)/view-deposit?id=${item.id}`);
                   setOpenMenuId(null);
                 }}
                 title="View Deposit"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                  <FontAwesome name="money" size={22} color={prms.color} />
                 )}
               />
             </Menu>

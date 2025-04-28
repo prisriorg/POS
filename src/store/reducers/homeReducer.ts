@@ -21,6 +21,7 @@ export interface IHomeState {
   homes: any[];
   sales: any[];
   dashboard: {};
+  registers: any[];
 
 }
 const initialState: IHomeState = {
@@ -44,6 +45,7 @@ const initialState: IHomeState = {
   homes: [],
   sales: [],
   dashboard: {},
+  registers: [],
 };
 
 export const homeSlice = createSlice({
@@ -173,6 +175,10 @@ export const homeSlice = createSlice({
       const stateValue = { ...state, dashboard: action.payload };
       return stateValue;
     },
+    setRegisters: (state, action) => {
+      const stateValue = { ...state, registers: action.payload };
+      return stateValue;
+    },
 
   },
 });
@@ -201,5 +207,6 @@ export const {
   setHomes,
   setSales,
   setDashboard,
+  setRegisters,
 } = homeSlice.actions;
 export default homeSlice.reducer;

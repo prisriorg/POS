@@ -42,7 +42,7 @@ const AddCustomers = () => {
     postal_code: "",
     country: "",
     role_id: "5", // Default to customer role
-    customer_group: "1",
+    customer_group_id: "1",
     vat_number: "",
     province: "",
     user: false,
@@ -154,7 +154,7 @@ const AddCustomers = () => {
                     country: "",
                     user: false,
                     role_id: "5", // Default to customer role
-                    customer_group: "1",
+                    customer_group_id: "1",
                     vat_number: "",
                     province: "",
                   });
@@ -208,11 +208,11 @@ const AddCustomers = () => {
             style={styles.input}
             placeholder="Select Group"
             data={customerGroup}
-            value={formData.customer_group}
+            value={formData.customer_group_id}
             onChange={(item) =>
               setFormData((prev) => ({
                 ...prev,
-                customerGroup: item.value,
+                customer_group_id: item.value,
               }))
             }
             labelField="label"

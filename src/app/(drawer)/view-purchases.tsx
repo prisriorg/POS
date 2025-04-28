@@ -1,4 +1,11 @@
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import React, { useEffect, useCallback } from "react";
 import { Image } from "expo-image";
 import { Colors } from "@/src/constants/Colors";
@@ -158,9 +165,7 @@ const ViewPurchases = () => {
             >
               <Image
                 source={{
-                  uri: `http://${domain}${IMAGE_BASE_URL}${
-                    products[data?.product_id]?.image
-                  }`,
+                  uri: `${IMAGE_BASE_URL}${products[data?.product_id]?.image}`,
                 }}
                 style={{
                   width: 70,
@@ -334,26 +339,6 @@ const ViewPurchases = () => {
       >
         Edit Purchase
       </Button>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     </View>
   );
 };

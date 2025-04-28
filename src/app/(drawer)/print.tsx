@@ -975,9 +975,9 @@ const PrintPage = () => {
                         Bluetooth Printer
                       </Text>
                     </View>
-                    {selectedDevice?.name === device.name && (
+                    {/* {selectedDevice?.name === device.name && (
                       <CheckIcon color={theme.colors.primary} size={24} />
-                    )}
+                    )} */}
                   </TouchableOpacity>
                 ))
               )}

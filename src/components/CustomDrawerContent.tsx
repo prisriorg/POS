@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { useRouter } from "expo-router";
-import { AntDesign, Feather, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Feather,
+  Ionicons,
+  SimpleLineIcons,
+} from "@expo/vector-icons";
 import { MenuItem } from "./menu/items";
 import { useColorScheme } from "../hooks/useColorScheme.web";
 
@@ -24,25 +29,31 @@ export function CustomDrawerContent(props: any) {
             position: "absolute",
             right: 5,
             top: 6,
-            borderWidth: 1,
-            padding: 2,
+            // borderWidth: 1,
+            // padding: 2,
           }}
           onPress={() => props.navigation.closeDrawer()}
         >
-          <AntDesign name="close" size={24} />
+          <AntDesign name="close" size={30} />
         </TouchableOpacity>
       </View>
 
       {/* Drawer Items */}
       <View style={styles.drawerItems}>
         {/* Home Item */}
-
+        <MenuItem
+          onPress={() => {
+            router.push("/(drawer)/(tabs)");
+          }}
+          title="Dashboard"
+          icon={<AntDesign name="appstore-o" size={24}/>}
+        />
         <MenuItem
           onPress={() => {
             router.push("/(drawer)/products-inventory");
           }}
           title="Products & Inventory"
-          icon={<AntDesign name="appstore-o" size={24}/>}
+          icon={<Feather name="box" size={24}/>}
         />
 
         <MenuItem
@@ -58,7 +69,7 @@ export function CustomDrawerContent(props: any) {
             router.push("/(drawer)/sales");
           }}
           title="Sales"
-          icon={<AntDesign name="shoppingcart" size={24}/>}
+          icon={<AntDesign name="shoppingcart" size={24} />}
         />
         <MenuItem
           onPress={() => {
@@ -68,10 +79,12 @@ export function CustomDrawerContent(props: any) {
           icon={<AntDesign name="wallet" size={24} color="black" />}
         />
 
-        <MenuItem onPress={togglePeople} title="People" open={peopleOpen} 
+        <MenuItem
+          onPress={togglePeople}
+          title="People"
+          open={peopleOpen}
           icon={<SimpleLineIcons name="user" size={24} color="black" />}
-        
-        
+          lastIcon={true}
         />
 
         {peopleOpen && (
@@ -89,7 +102,6 @@ export function CustomDrawerContent(props: any) {
               }}
               title="All Customers"
               icon={<Feather name="user-plus" size={24} color="black" />}
-
             />
           </View>
         )}
@@ -100,7 +112,9 @@ export function CustomDrawerContent(props: any) {
             // router.push("/(drawer)/details-sales");
           }}
           title="Reports"
-          icon={<Ionicons name="document-text-outline" size={24} color="black" />}
+          icon={
+            <Ionicons name="document-text-outline" size={24} color="black" />
+          }
         />
       </View>
     </DrawerContentScrollView>
@@ -109,6 +123,7 @@ export function CustomDrawerContent(props: any) {
 
 const styles = StyleSheet.create({
   headerContainer: {
+    flex: 1,
     padding: 16,
     marginBottom: 8,
   },

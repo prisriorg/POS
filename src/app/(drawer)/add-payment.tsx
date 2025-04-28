@@ -59,10 +59,7 @@ const AddPayment = () => {
 
       <ScrollView>
         <View style={{ margin: 20 }}>
-          <Text
-          style={styles.text}
-          
-          >Amount Due</Text>
+          <Text style={styles.text}>Amount Due</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter amount due"
@@ -85,11 +82,11 @@ const AddPayment = () => {
           <TextInput style={styles.input} placeholder="Enter account" />
 
           <Text style={styles.text}>Note</Text>
-          <TextInput style={[styles.input, { height: 80, textAlignVertical: "top" }]} placeholder="Enter note"
+          <TextInput
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+            placeholder="Enter note"
             multiline={true}
-            numberOfLines={4} 
-          
-          
+            numberOfLines={4}
           />
           <Spacer20 />
           <Spacer20 />

@@ -8,11 +8,13 @@ export const MenuItem = ({
   title,
   open,
   icon = <MaterialCommunityIcons name="content-cut" size={24} />,
+  lastIcon = false,
 }: {
   onPress: () => void;
   title: string;
   open?: boolean;
   icon?: React.ReactNode;
+  lastIcon?: boolean;
 }) => {
   return (
     <>
@@ -28,11 +30,13 @@ export const MenuItem = ({
         >
           {title}
         </Text>
-        <Entypo
-          name={open ? "chevron-down" : "chevron-right"}
-          size={20}
-          style={styles.arrowIcon}
-        />
+        {lastIcon && (
+          <Entypo
+            name={open ? "chevron-down" : "chevron-right"}
+            size={20}
+            style={styles.arrowIcon}
+          />
+        )}
       </TouchableOpacity>
 
       <Divider

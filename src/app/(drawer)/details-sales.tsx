@@ -207,7 +207,7 @@ const DetailsSales = () => {
                     >
                       <Image
                         source={{
-                          uri: `http://${domain}${IMAGE_BASE_URL}${
+                          uri: `${IMAGE_BASE_URL}${
                             products[data?.product_id]?.image
                           }`,
                         }}

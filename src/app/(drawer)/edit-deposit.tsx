@@ -1,4 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+} from "react-native";
 import React, { useCallback, useState } from "react";
 import {
   Stack,
@@ -7,25 +14,29 @@ import {
   useRouter,
 } from "expo-router";
 import { Colors } from "@/src/constants/Colors";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { FlatList } from "react-native-gesture-handler";
-import { useAppSelector } from "@/src/store/reduxHook";
+import { Ionicons } from "@expo/vector-icons";
+import { Spacer15, Spacer20 } from "@/src/utils/Spacing";
+import { Button } from "react-native-paper";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { BASE_URL } from "@/src/utils/config";
+import { useAppSelector } from "@/src/store/reduxHook";
 
-const ViewDeposit = () => {
+const AddDeposit = () => {
   const router = useRouter();
-  const { user, domain } = useAppSelector((st) => st.auth);
   const prms = useLocalSearchParams();
-  const [getlists, setLists] = useState([]);
-
+  const { domain, user } = useAppSelector((sate) => sate.auth);
   const visualFeedback = useVisualFeedback();
+  const [formData, setFormData] = useState({
+    amount: "0",
+    note: "",
+  });
+
   const getData = async (id: string) => {
     try {
       visualFeedback.showLoadingBackdrop();
 
       const response = await fetch(
-        `${BASE_URL}deposits/${id}?user_id=${user?.id}&tenant_id=${domain}`,
+        `${BASE_URL}deposit/${id}?user_id=${user?.id}&tenant_id=${domain}`,
         {
           method: "GET",
           headers: {
@@ -35,7 +46,7 @@ const ViewDeposit = () => {
       );
       const data = await response.json();
       if (response.status === 200) {
-        setLists(data.deposits);
+        setFormData(data.deposit);
       } else {
         // Handle error
         console.error("Error fetching purchase details:", data.message);
@@ -58,66 +69,38 @@ const ViewDeposit = () => {
     }, [prms.id, user?.id, domain])
   );
 
-  const itemrender = ({ item }: any) => {
-    return (
-      <Pressable
-        onPress={() => {
-          router.push(`/(drawer)/edit-deposit?id=${item.id}`);
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: "white",
-            paddingBottom: 10,
-            paddingTop: 15,
-            borderBottomWidth: 1,
-            borderBottomColor: "#ccc",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.text}>Date</Text>
-            <Text style={styles.text}>Amount</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.text}>
-              {new Date(item.date).toDateString()}
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                marginBottom: 8,
-                // marginTop: 16,
-                color: "blue",
-              }}
-            >
-              {item.amount}{" "}
-              <MaterialCommunityIcons
-                name="greater-than"
-                size={16}
-                color="#ddd"
-              />
-            </Text>
-          </View>
-        </View>
-      </Pressable>
-    );
+  const handleSubmit = async () => {
+    try {
+      visualFeedback.showLoadingBackdrop();
+
+      const response = await fetch(
+        `${BASE_URL}deposit/update/${prms?.id}?tenant_id=${domain}&user_id=${user?.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: formData.amount,
+            note: formData.note,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (response.status === 200) {
+        router.push("/(drawer)/view-deposit");
+      }
+    } catch (err) {
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
         options={{
-          title: "View Deposit",
+          title: "Add Deposit",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -156,35 +139,48 @@ const ViewDeposit = () => {
 
       <ScrollView>
         <View style={{ margin: 20 }}>
-          {getlists.length > 0 ? (
-            <FlatList
-              data={getlists}
-              renderItem={itemrender}
-              showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingBottom: 20,
-              }}
-            />
-          ) : (
-            <>
-              <Text
-                style={{
-                  textAlign: "center",
-                  flex: 1,
-                }}
-              >
-                No deposits
-              </Text>
-            </>
-          )}
+          <Text style={styles.text}>Amount</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter amount"
+            keyboardType="numeric"
+            onChangeText={(text) => {
+              setFormData((prevState) => {
+                return { ...prevState, amount: text };
+              });
+            }}
+          />
+
+          <Text style={styles.text}>Note</Text>
+          <TextInput
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+            placeholder="Enter note"
+            multiline={true}
+            numberOfLines={4}
+            onChangeText={(text) => {
+              setFormData((prevState) => {
+                return { ...prevState, note: text };
+              });
+            }}
+          />
+          <Spacer20 />
+          <Spacer20 />
         </View>
       </ScrollView>
+      <Button
+        mode="contained"
+        onPress={handleSubmit}
+        style={{
+          backgroundColor: Colors.colors.primary,
+        }}
+      >
+        Add Deposit
+      </Button>
     </View>
   );
 };
 
-export default ViewDeposit;
+export default AddDeposit;
 
 const styles = StyleSheet.create({
   input: {
@@ -198,7 +194,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     marginBottom: 8,
-    // marginTop: 16,
+    marginTop: 16,
     color: Colors.colors.text,
   },
 });

@@ -14,6 +14,10 @@ export default function TabsLayout() {
         drawerType: "front",
         drawerStyle: {
           width: "70%",
+          marginRight: 20,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          backgroundColor: Colors.colors.background,
         },
         headerStyle: {
           backgroundColor: Colors.colors.primary,

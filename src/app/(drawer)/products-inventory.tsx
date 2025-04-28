@@ -140,7 +140,7 @@ const ProductsInventoryScreen = () => {
         >
           <Image
             source={{
-              uri: `http://${domain}${IMAGE_BASE_URL}${item?.image}`,
+              uri: `${IMAGE_BASE_URL}${item?.image}`,
             }}
             style={{
               flex: 1,

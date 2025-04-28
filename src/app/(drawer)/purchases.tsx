@@ -478,7 +478,7 @@ const AllPurchases = () => {
                 }));
               }}
               style={{
-                backgroundColor: "#ECE6F0",
+                backgroundColor: "#fff",
                 borderRadius: 8,
                 padding: 10,
                 width: "100%",
@@ -500,7 +500,7 @@ const AllPurchases = () => {
                 }));
               }}
               style={{
-                backgroundColor: "#ECE6F0",
+                backgroundColor: "#fff",
                 borderRadius: 8,
                 padding: 10,
                 width: "100%",
@@ -540,7 +540,7 @@ export default AllPurchases;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
 
   card: {

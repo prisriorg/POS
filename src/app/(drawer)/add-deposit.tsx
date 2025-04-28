@@ -6,15 +6,50 @@ import {
   View,
   TextInput,
 } from "react-native";
-import React from "react";
-import { Stack, useRouter } from "expo-router";
+import React, { useState } from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Spacer15, Spacer20 } from "@/src/utils/Spacing";
 import { Button } from "react-native-paper";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
+import { BASE_URL } from "@/src/utils/config";
+import { useAppSelector } from "@/src/store/reduxHook";
 
 const AddDeposit = () => {
   const router = useRouter();
+  const prms = useLocalSearchParams();
+  const { domain, user } = useAppSelector((sate) => sate.auth);
+  const visualFeedback = useVisualFeedback();
+  const [formData, setFormData] = useState({
+    amount: "0",
+    customer_id: prms?.id,
+    note: "",
+  });
+
+  const handleSubmit = async () => {
+    try {
+      visualFeedback.showLoadingBackdrop();
+
+      const response = await fetch(
+        `${BASE_URL}deposit/save?tenant_id=${domain}&user_id=${user?.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...formData, customer_id: prms?.id }),
+        }
+      );
+      const result = await response.json();
+      if (response.status === 200) {
+        router.push("/(drawer)/view-deposit");
+      }
+    } catch (err) {
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
@@ -64,6 +99,11 @@ const AddDeposit = () => {
             style={styles.input}
             placeholder="Enter amount"
             keyboardType="numeric"
+            onChangeText={(text) => {
+              setFormData((prevState) => {
+                return { ...prevState, amount: text };
+              });
+            }}
           />
 
           <Text style={styles.text}>Note</Text>
@@ -72,14 +112,17 @@ const AddDeposit = () => {
             placeholder="Enter note"
             multiline={true}
             numberOfLines={4}
+            onChangeText={(text) => {
+              setFormData((prevState) => {
+                return { ...prevState, note: text };
+              });
+            }}
           />
           <Spacer20 />
           <Spacer20 />
           <Button
             mode="contained"
-            onPress={() => {
-              router.replace("/(drawer)/products-inventory");
-            }}
+            onPress={handleSubmit}
             style={{
               backgroundColor: Colors.colors.primary,
             }}

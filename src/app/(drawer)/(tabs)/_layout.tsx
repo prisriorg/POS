@@ -22,7 +22,8 @@ import {
   setExpenses,
   setHSCodes,
   setSales,
-  setDashboard
+  setDashboard,
+  setRegisters,
 } from "@/src/store/reducers/homeReducer";
 
 import NetInfo from "@react-native-community/netinfo";
@@ -56,7 +57,48 @@ export default function TabLayout() {
     getHsCodes();
     getSales();
     getDashboard();
+    getRegisters();
+
+    
   }, []);
+
+
+  const getRegisters = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const registers = await AsyncStorage.getItem("getRegisters");
+      if (registers) {
+        dispatch(setRegisters(JSON.parse(registers)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}registers?user_id=${user?.id}&tenant_id=${domain}&status=1`,
+        {
+          method: "GET",
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setRegisters(result?.registers));
+          await AsyncStorage.setItem(
+            "getRegisters",
+            JSON.stringify(result?.registers)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  }
+
+
+
 
   const getDashboard = async () => {
     const netInfo = await NetInfo.fetch();
