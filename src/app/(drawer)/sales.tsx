@@ -98,10 +98,14 @@ const AllSales = () => {
     category: string;
     date: string;
     warehoues: string;
+    sale: number | null;
+    payment: number | null;
   }>({
     category: "",
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     warehoues: "",
+    sale: 0,
+    payment: 0,
   });
 
   React.useEffect(() => {
@@ -181,29 +185,22 @@ const AllSales = () => {
                   />
                 </Pressable>
               }
+              style={{
+                backgroundColor: "#fff",
+              }}
             >
               <Menu.Item
                 onPress={() => {
-                  console.log("Edit item", item.id);
+                  router.push("/(drawer)/s-add-payment");
                   setOpenMenuId(null);
                 }}
-                title="Edit"
+                title="Edit Payment"
                 leadingIcon={(prms) => (
                   <MaterialIcons name="edit" size={20} color={prms.color} />
                 )}
-              />
-              <Divider />
-              <Menu.Item
-                onPress={() => {
-                  // router.push({
-                  //   pathname: "/(drawer)/details-sales",
-                  //   params: { id: item.id },
-                  // });
+                style={{
+                  backgroundColor: "#fff",
                 }}
-                title="Details"
-                leadingIcon={(prms) => (
-                  <MaterialIcons name="info" size={20} color={prms.color} />
-                )}
               />
             </Menu>
           </View>
@@ -453,8 +450,10 @@ const AllSales = () => {
                 onPress={() => {
                   setFilter({
                     category: "",
-                    date: "",
+                    date: new Date().toISOString().split("T")[0],
                     warehoues: "",
+                    sale: 0,
+                    payment: 0,
                   });
                 }}
               >
@@ -474,14 +473,14 @@ const AllSales = () => {
                       onPress={() => {
                         setFilter((prev) => ({
                           ...prev,
-                          category: brand.value,
+                          sale: brand.value,
                         }));
                       }}
                       style={[
                         styles.chip,
                         {
                           backgroundColor:
-                            filter.category === brand.value
+                            filter.sale === brand.value
                               ? Colors.colors.primary
                               : "#dedede",
                         },
@@ -490,9 +489,7 @@ const AllSales = () => {
                       <Text
                         style={{
                           color:
-                            filter.category === brand.value
-                              ? "#fff"
-                              : "#666565",
+                            filter.sale === brand.value ? "#fff" : "#666565",
                         }}
                       >
                         {brand.label}
@@ -511,14 +508,14 @@ const AllSales = () => {
                       onPress={() => {
                         setFilter((prev) => ({
                           ...prev,
-                          category: brand.value,
+                          payment: brand.value,
                         }));
                       }}
                       style={[
                         styles.chip,
                         {
                           backgroundColor:
-                            filter.category === brand.value
+                            filter.payment === brand.value
                               ? Colors.colors.primary
                               : "#dedede",
                         },
@@ -527,9 +524,7 @@ const AllSales = () => {
                       <Text
                         style={{
                           color:
-                            filter.category === brand.value
-                              ? "#fff"
-                              : "#666565",
+                            filter.payment === brand.value ? "#fff" : "#666565",
                         }}
                       >
                         {brand.label}
@@ -607,18 +602,15 @@ const AllSales = () => {
                 }}
               ></Dropdown>
               <Text style={styles.filterTitle}>Date</Text>
-              <Dropdown
-                data={warehouses}
-                labelField="name"
-                valueField="id"
-                value={filter.warehoues}
-                placeholder="12/3/2023"
-                onChange={(item) => {
+              <TextInput
+                placeholder="Select Date"
+                onChangeText={(val) => {
                   setFilter((prev) => ({
                     ...prev,
-                    warehoues: item.id,
+                    date: val,
                   }));
                 }}
+                value={filter.date}
                 style={{
                   borderWidth: 1,
                   borderColor: "#bbb",
@@ -627,7 +619,7 @@ const AllSales = () => {
                   width: "100%",
                   marginBottom: 10,
                 }}
-              ></Dropdown>
+              ></TextInput>
               <Spacer20 />
               <Button
                 mode="contained"

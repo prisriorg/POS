@@ -1177,11 +1177,6 @@
     find-up "^5.0.0"
     js-yaml "^4.1.0"
 
-"@heasy/react-native-sunmi-printer@^1.8.4":
-  version "1.8.4"
-  resolved "https://registry.yarnpkg.com/@heasy/react-native-sunmi-printer/-/react-native-sunmi-printer-1.8.4.tgz#e5b0f57502cb269664fcc6eccb2e8647399bf2a5"
-  integrity sha512-cRg2aWQEerAXrV3vMnbL0CmHz8PjJQDOXfMUeUiStvpg8/XQpWME8/c9GqBCsQQ5bK6qXiSI2lnpTYQs0R8n5A==
-
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/@isaacs/cliui/-/cliui-8.0.2.tgz#b37667b7bc181c168782259bab42474fbf52b550"
@@ -1534,6 +1529,11 @@
   version "11.4.1"
   resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-11.4.1.tgz#a3c247aceab35f75dd0aa4bfa85d2be5a4508688"
   integrity sha512-B0BYAkghz3Q2V09BF88RA601XursIEA111tnc2JOaN7axJWmNefmfjZqw/KdSxKZp7CZUuPpjBmz/WCR9uaHYg==
+
+"@react-native-menu/menu@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@react-native-menu/menu/-/menu-1.2.3.tgz#7a6a6748d610ab0d14aa65e1414520a5254aeff6"
+  integrity sha512-sEfiVIivsa0lSelFm9Wbm/RAi+XoEHc75GGhjwvSrj9KSCVvNNXwr9F8l42e1t/lzYvVYzmkYxLG6VKxrDYJiw==
 
 "@react-native/assets-registry@0.76.9":
   version "0.76.9"

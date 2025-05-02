@@ -125,6 +125,9 @@ const AllUsers = () => {
                   />
                 </Pressable>
               }
+              style={{
+                backgroundColor: "#fff",
+              }}
             >
               <Menu.Item
                 onPress={() => {
@@ -135,6 +138,9 @@ const AllUsers = () => {
                 leadingIcon={(prms) => (
                   <MaterialIcons name="edit" size={20} color={prms.color} />
                 )}
+                style={{
+                  backgroundColor: "#fff",
+                }}
               />
             </Menu>
           </View>

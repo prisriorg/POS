@@ -29,6 +29,7 @@ import {
   Feather,
   MaterialCommunityIcons,
   Ionicons,
+  SimpleLineIcons,
 } from "@expo/vector-icons";
 import { Spacer20 } from "@/src/utils/Spacing";
 import { IMAGE_BASE_URL } from "@/src/utils/config";
@@ -202,6 +203,8 @@ const ProductsInventoryScreen = () => {
               ${item.price.toFixed(2)}
             </Text>
 
+            
+
             <Menu
               visible={isMenuOpen}
               onDismiss={() => setOpenMenuId(null)}
@@ -214,6 +217,9 @@ const ProductsInventoryScreen = () => {
                   />
                 </Pressable>
               }
+              style={{
+                backgroundColor: "#fff",
+              }}
             >
               <Menu.Item
                 onPress={() => {
@@ -224,12 +230,18 @@ const ProductsInventoryScreen = () => {
                 leadingIcon={(prms) => (
                   <MaterialIcons name="edit" size={20} color={prms.color} />
                 )}
+                style={{
+                  backgroundColor: "#fff",
+                }}
               />
               <Divider />
               <Menu.Item
                 onPress={() => {
                   console.log("Details", item.id);
                   setOpenMenuId(null);
+                }}
+                style={{
+                  backgroundColor: "#fff",
                 }}
                 title="Details"
                 leadingIcon={(prms) => (
@@ -278,14 +290,14 @@ const ProductsInventoryScreen = () => {
               placeholderTextColor="black"
               icon={() => <AntDesign name="search1" size={20} color="black" />}
               right={() => (
-                <IconButton
-                  icon="filter"
-                  size={20}
+                <SimpleLineIcons
+                  name="equalizer"
+                  size={18}
                   onPress={() => {
                     setShowFilter(true);
                   }}
                   iconColor="black"
-                  style={{ marginRight: 10 }}
+                  style={{ marginRight: 15, transform: [{ rotate: "90deg" }] }}
                 />
               )}
             />
@@ -317,8 +329,6 @@ const ProductsInventoryScreen = () => {
             </Pressable>
           </View>
         </View>
-
-        <Spacer20 />
 
         {filteredProducts.length > 0 ? (
           <View
@@ -376,7 +386,7 @@ const ProductsInventoryScreen = () => {
                   });
                 }}
               >
-                <Text style={{ fontSize: 18, color: "#65558F" }}>Clear</Text>
+                <Text style={{ fontSize: 18, color: "#0e0e0e" }}>Clear</Text>
               </Pressable>
             </View>
           </View>
@@ -407,7 +417,9 @@ const ProductsInventoryScreen = () => {
                     <Text
                       style={{
                         color:
-                          filter.category === category.name ? "#fff" : "#666565",
+                          filter.category === category.name
+                            ? "#fff"
+                            : "#666565",
                       }}
                     >
                       {category.name}
@@ -441,7 +453,8 @@ const ProductsInventoryScreen = () => {
                   >
                     <Text
                       style={{
-                        color: filter.brand === brand.title ? "#fff" : "#666565",
+                        color:
+                          filter.brand === brand.title ? "#fff" : "#666565",
                       }}
                     >
                       {brand.title}

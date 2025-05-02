@@ -65,7 +65,7 @@ const Expenses = () => {
     warehoues: string;
   }>({
     category: "",
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     warehoues: "",
   });
 
@@ -129,6 +129,9 @@ const Expenses = () => {
           </Text>
           <Menu
             visible={isMenuOpen}
+            style={{
+              backgroundColor: "#fff",
+            }}
             onDismiss={() => setOpenMenuId(null)}
             anchor={
               <Pressable onPress={() => setOpenMenuId(item.id)}>
@@ -137,6 +140,7 @@ const Expenses = () => {
                   size={24}
                   color="black"
                 />
+
               </Pressable>
             }
           >
@@ -149,6 +153,9 @@ const Expenses = () => {
               leadingIcon={(prms) => (
                 <MaterialIcons name="edit" size={20} color={prms.color} />
               )}
+              style={{
+                backgroundColor: "#fff",
+              }}
             />
             <Divider />
             <Menu.Item
@@ -160,6 +167,9 @@ const Expenses = () => {
               leadingIcon={(prms) => (
                 <MaterialIcons name="info" size={20} color={prms.color} />
               )}
+              style={{
+                backgroundColor: "#fff",
+              }}
             />
           </Menu>
         </View>
@@ -320,7 +330,8 @@ const Expenses = () => {
                 onPress={() => {
                   setFilter({
                     category: "",
-                    date: "",
+                    date: new Date().toISOString().split("T")[0],
+                    
                     warehoues: "",
                   });
                 }}
@@ -342,7 +353,8 @@ const Expenses = () => {
               }}
               selectionColor={"black"}
               placeholderTextColor="#ddd"
-              editable={false}
+              value={filter.date}
+              // editable={false}
               style={{
                 borderRadius: 8,
                 padding: 10,

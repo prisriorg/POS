@@ -6,9 +6,9 @@ import {
   View,
   ScrollView,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import { Button, Divider } from "react-native-paper";
@@ -44,6 +44,10 @@ const EditPurcheses = () => {
     date: new Date().toISOString().split("T")[0], // Default date
     time: `${new Date().getHours()}:${new Date().getMinutes()}`, // Default time
   });
+
+  const prm = useLocalSearchParams();
+
+  const [products, useProducts] = useState([]);
 
   const visualFeedback = useVisualFeedback();
   const { user, domain } = useAppSelector((state) => state.auth);
@@ -100,7 +104,7 @@ const EditPurcheses = () => {
     try {
       visualFeedback.showLoadingBackdrop();
 
-      const apiUrl = `${BASE_URL}save/purchase?user_id=${user.id}&tenant_id=${domain}`;
+      const apiUrl = `${BASE_URL}purchase/update/${prm?.id}?user_id=${user.id}&tenant_id=${domain}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -131,7 +135,7 @@ const EditPurcheses = () => {
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
         options={{
-          title: "Add New Purchases",
+          title: "Edit Purchase",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -180,25 +184,6 @@ const EditPurcheses = () => {
             />
           </Pressable>
 
-          {/* Time Picker */}
-          <Text
-            style={{
-              fontSize: 16,
-              marginBottom: 8,
-              marginTop: 16,
-            }}
-          >
-            Time
-          </Text>
-          <Pressable onPress={showTimepicker}>
-            <TextInput
-              style={styles.input}
-              placeholder="Select time"
-              editable={false}
-              value={formData.time}
-            />
-          </Pressable>
-
           <Text
             style={{
               fontSize: 16,
@@ -237,11 +222,11 @@ const EditPurcheses = () => {
               color: Colors.colors.text,
             }}
           >
-            Suppliers
+            Supplier
           </Text>
           <Dropdown
             style={styles.input}
-            placeholder="Select account"
+            placeholder="Select Supplier"
             data={expenseAcc}
             value={formData.supplier_id}
             labelField="label"
@@ -261,11 +246,11 @@ const EditPurcheses = () => {
               color: Colors.colors.text,
             }}
           >
-            Purchases Status
+            Purchase Status
           </Text>
           <Dropdown
             style={styles.input}
-            placeholder="Purchases status"
+            placeholder="Purchase status"
             data={purchaseStatus}
             value={formData.expense_category_id}
             labelField="label"
@@ -375,7 +360,7 @@ const EditPurcheses = () => {
               // backgroundColor: Colors.colors.primary,
               borderColor: Colors.colors.primary,
             }}
-            labelStyle={{ color: "white", }}
+            labelStyle={{ color: "white" }}
           >
             <Text
               style={{
@@ -421,50 +406,35 @@ const EditPurcheses = () => {
               </Text>
             </View>
             {/* Example row */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                padding: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: "#ccc",
-              }}
-            >
-              <Text style={{ flex: 1, textAlign: "left" }}>
-                Example Product
-              </Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ textAlign: "right" }}>$100.00</Text>
-                <Text
-                  style={{ textAlign: "right", color: Colors.colors.border }}
+            {products.map((ide:any) => (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    padding: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ddd",
+                  }}
                 >
-                  34567
-                </Text>
-              </View>
-            </View>
-            <Divider />
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                padding: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: "#ccc",
-              }}
-            >
-              <Text style={{ flex: 1, textAlign: "left" }}>
-                Example Product
-              </Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ textAlign: "right" }}>$100.00</Text>
-                <Text
-                  style={{ textAlign: "right", color: Colors.colors.border }}
-                >
-                  34567
-                </Text>
-              </View>
-            </View>
+                  <Text style={{ flex: 1, textAlign: "left" }}>
+                    {ide.name}
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ textAlign: "right" }}>$100.00</Text>
+                    <Text
+                      style={{
+                        textAlign: "right",
+                        color: Colors.colors.border,
+                      }}
+                    >
+                      34567
+                    </Text>
+                  </View>
+                </View>
+                <Divider />
+              </>
+            ))}
           </View>
           <View
             style={{
@@ -490,7 +460,7 @@ const EditPurcheses = () => {
                 textAlign: "right",
               }}
             >
-              5
+              {products.length}
             </Text>
           </View>
 

@@ -1,4 +1,4 @@
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, Pressable, ScrollView,Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/src/constants/Colors";
@@ -796,19 +796,18 @@ const PrintPage = () => {
           {/* QR Code Preview */}
           <View style={styles.qrContainer}>
             {pData?.qrText ? (
-              // <Image
-              //   source={{
-              //     uri: `data:image/png;base64,${pData.qrCode}`,
-              //   }}
-              //   style={{ height: 100, width: 100 }}
-              //   resizeMode="contain"
-              // />
+              <Image
+                source={{
+                  uri: `data:image/png;base64,${pData.qrCode}`,
+                }}
+                style={{ height: 100, width: 100 }}
+                resizeMode="contain"
+              />
               // <QRCode
               //   value={pData?.qrText}
               //   size={100}
               //   getRef={(ref) => setQrRef(ref)}
               // />
-              <></>
             ) : (
               <View style={styles.qrError}>
                 <Text>
@@ -845,7 +844,7 @@ const PrintPage = () => {
           disabled={isPrinting}
         >
           {/* <PrinterIcon color={theme.colors.white} size={24} /> */}
-          <Text >
+          <Text style={{ color:"#fff" }}>
             {isPrinting ? "Printing..." : "Print Receipt"}
           </Text>
         </Pressable>
@@ -1047,18 +1046,19 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1.5,
     borderColor: Colors.colors.primary,
-    borderRadius: 4,
+    borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
   },
   printButton: {
     flex: 1,
     backgroundColor: Colors.colors.primary,
-    borderRadius: 4,
+    borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: 8,
+    color: "white",
   },
   modalContainer: {
     flex: 1,

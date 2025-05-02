@@ -27,7 +27,7 @@ const POS = () => {
   });
   const router = useRouter();
   const visualFeedback = useVisualFeedback();
-  const { warehouses } = useAppSelector((state) => state.home);
+  const { warehouses, registers } = useAppSelector((state) => state.home);
   const { user, domain } = useAppSelector((state) => state.auth);
 
   const handleSubmit = async () => {
@@ -48,7 +48,10 @@ const POS = () => {
         }
       );
       const data = await response.json();
-      console.log("Endpoint:", `${BASE_URL}register/create?user_id=${user?.id}&tenant_id=${domain}`); // Log the response data
+      console.log(
+        "Endpoint:",
+        `${BASE_URL}register/create?user_id=${user?.id}&tenant_id=${domain}`
+      ); // Log the response data
       console.log("Request Body:", {
         cash_in_hand_usd: formData.cash_in_hand_usd,
         warehouse_id: formData.warehouse_id,
@@ -73,16 +76,22 @@ const POS = () => {
 
   useFocusEffect(
     useCallback(() => {
-      router.push("/(drawer)/pos-home");
-      setShow(true);
-      return () => {
+      const register = registers.find(
+        (reg: any) => reg.user_id === user?.id
+      )?.status;
+      if (register === 1) {
         setShow(false);
         setFormData({
           cash_in_hand_usd: "",
           warehouse_id: "",
           cash_in_hand_local: "",
         });
-      };
+      } else {
+        setShow(true);
+        router.replace("/(drawer)/pos-home");
+      }
+
+      return () => {};
     }, [show])
   );
 

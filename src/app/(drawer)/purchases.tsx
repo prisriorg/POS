@@ -22,6 +22,7 @@ import {
   AntDesign,
   MaterialCommunityIcons,
   MaterialIcons,
+  SimpleLineIcons,
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
@@ -142,6 +143,9 @@ const AllPurchases = () => {
                   />
                 </Pressable>
               }
+              style={{
+                backgroundColor: "#fff",
+              }}
             >
               <Menu.Item
                 onPress={() => {
@@ -152,12 +156,18 @@ const AllPurchases = () => {
                 leadingIcon={(prms) => (
                   <MaterialIcons name="edit" size={20} color={prms.color} />
                 )}
+                style={{
+                  backgroundColor: "#fff",
+                }}
               />
               <Divider />
               <Menu.Item
                 onPress={() => {
                   router.replace(`/(drawer)/add-payment?id=${item.id}`);
                   setOpenMenuId(null);
+                }}
+                style={{
+                  backgroundColor: "#fff",
                 }}
                 title="Add Payment"
                 leadingIcon={(prms) => (
@@ -170,6 +180,9 @@ const AllPurchases = () => {
                   router.replace(`/(drawer)/view-payment?id=${item.id}`);
                   setOpenMenuId(null);
                 }}
+                style={{
+                  backgroundColor: "#fff",
+                }}
                 title="View Payment"
                 leadingIcon={(prms) => (
                   <MaterialIcons name="edit" size={20} color={prms.color} />
@@ -181,6 +194,9 @@ const AllPurchases = () => {
                 onPress={() => {
                   router.replace(`/(drawer)/view-purchases?id=${item.id}`);
                   setOpenMenuId(null);
+                }}
+                style={{
+                  backgroundColor: "#fff",
                 }}
                 title="Details"
                 leadingIcon={(prms) => (
@@ -296,14 +312,14 @@ const AllPurchases = () => {
               placeholderTextColor="black"
               icon={() => <AntDesign name="search1" size={20} color="black" />}
               right={() => (
-                <IconButton
-                  icon="filter"
-                  size={20}
+                <SimpleLineIcons
+                  name="equalizer"
+                  size={18}
                   onPress={() => {
                     setShowFilter(true);
                   }}
                   iconColor="black"
-                  style={{ marginRight: 10 }}
+                  style={{ marginRight: 15, transform: [{ rotate: "90deg" }] }}
                 />
               )}
             />
@@ -335,7 +351,6 @@ const AllPurchases = () => {
             </Pressable>
           </View>
         </View>
-        <Spacer20 />
         {filteredExpenses.length > 0 ? (
           <FlatList
             data={filteredExpenses}
@@ -385,7 +400,7 @@ const AllPurchases = () => {
                   });
                 }}
               >
-                <Text style={{ fontSize: 18, color: "#65558F" }}>Clear</Text>
+                <Text style={{ fontSize: 18, color: "#0e0e0e" }}>Clear</Text>
               </Pressable>
             </View>
           </View>
@@ -397,7 +412,6 @@ const AllPurchases = () => {
                 {purchaseStatus.map((brand: any) => (
                   <Chip
                     key={brand.id}
-                    mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -410,13 +424,13 @@ const AllPurchases = () => {
                         backgroundColor:
                           filter.status === brand.value
                             ? Colors.colors.primary
-                            : "#fff",
+                            : "#dedede",
                       },
                     ]}
                   >
                     <Text
                       style={{
-                        color: filter.status === brand.value ? "#fff" : "#000",
+                        color: filter.status === brand.value ?  "#fff" : "#666565",
                       }}
                     >
                       {brand.label}
@@ -432,7 +446,6 @@ const AllPurchases = () => {
                 {paymentStatus.map((brand: any) => (
                   <Chip
                     key={brand.id}
-                    mode="outlined"
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
@@ -445,7 +458,7 @@ const AllPurchases = () => {
                         backgroundColor:
                           filter.paymentStatus === brand.value
                             ? Colors.colors.primary
-                            : "#fff",
+                            : "#dedede",
                       },
                     ]}
                   >
@@ -453,8 +466,7 @@ const AllPurchases = () => {
                       style={{
                         color:
                           filter.paymentStatus === brand.value
-                            ? "#fff"
-                            : "#000",
+                            ? "#fff" : "#666565",
                       }}
                     >
                       {brand.label}
@@ -483,6 +495,8 @@ const AllPurchases = () => {
                 padding: 10,
                 width: "100%",
                 marginBottom: 10,
+                borderWidth: 1,
+                borderColor: "#ccc",
               }}
             ></Dropdown>
             <Spacer20 />
@@ -505,6 +519,8 @@ const AllPurchases = () => {
                 padding: 10,
                 width: "100%",
                 marginBottom: 10,
+                borderWidth: 1,
+                borderColor: "#ccc",
               }}
             ></Dropdown>
             <Spacer20 />

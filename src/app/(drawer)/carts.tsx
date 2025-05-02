@@ -100,6 +100,7 @@ const CartScreen = () => {
   );
   const [print, setPrint] = useState(false);
   const [currency, setCurrency] = useState(1);
+  const [selectPaymentMethod, setSelectPaymentMethod] = useState(1);
   const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
   const [amountReceived, setAmountReceived] = useState("0.00");
   const [warehouse, setWarehouse] = useState(warehouses[0]?.id || 1);
@@ -153,7 +154,7 @@ const CartScreen = () => {
 
   const calculateChangeAmount = () => {
     const netAmount = parseFloat(calculateNetAmount());
-    const received = amountReceived || 0;
+    const received = parseFloat(amountReceived) || 0;
     return Math.max(0, received - netAmount).toFixed(2);
   };
 
@@ -365,9 +366,9 @@ const CartScreen = () => {
                 value: 1,
               },
             ]}
-            value={customer}
-            placeholder="Select Customer"
-            onChange={(val) => setCurrency(parseInt(val.value))}
+            value={selectPaymentMethod}
+            placeholder="Select Payment Method"
+            onChange={(val) => setSelectPaymentMethod(parseInt(val.value))}
           />
 
           {/* Customer Dropdown */}
@@ -490,15 +491,74 @@ const CartScreen = () => {
         <View style={styles.successIconContainer}>
           <Ionicons
             name="checkmark-outline"
-            size={70}
+            size={50}
             color={Colors.colors.card}
             style={styles.successIcon}
           />
         </View>
 
-        <Spacer30 />
+        <Spacer20 />
         <Text style={styles.successText}>Payment Completed</Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: Colors.colors.text,
+            textAlign: "center",
+            marginTop: 5,
+          }}
+        >
+          Your payment has been processed successfully.
+        </Text>
         <Spacer30 />
+
+        <View
+          style={{
+            paddingHorizontal: 10,
+            backgroundColor: Colors.colors.card,
+            borderRadius: 10,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: 50,
+              paddingHorizontal: 10,
+              backgroundColor: Colors.colors.card,
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: "bold" }}>Amount</Text>
+            <Text style={{ fontSize: 16 }}>
+              {selectedCurrency?.code || "USD"} {calculateSubTotal()}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: 50,
+              paddingHorizontal: 10,
+              backgroundColor: Colors.colors.card,
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+              Payment Method
+            </Text>
+            <Text style={{ fontSize: 16 }}>
+              {[
+              {
+                id: 1,
+                label: "Cash",
+                value: 1,
+              },
+            ].find((item) => item.id === selectPaymentMethod)?.label}
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.modalButtonsContainer}>
           <Button
@@ -746,7 +806,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modalContainer: {
-    backgroundColor: "white",
+    backgroundColor: "#F6F6F6",
     padding: 20,
     margin: 20,
     borderRadius: 10,
@@ -758,7 +818,10 @@ const styles = StyleSheet.create({
   },
   successIcon: {
     backgroundColor: "#009951",
-    borderRadius: 35,
+    borderRadius: 50,
+
+    borderWidth: 10,
+    borderColor: "#fff",
     padding: 10,
   },
   successText: {
@@ -771,7 +834,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   closeButton: {
-    borderRadius: 25,
+    borderRadius: 50,
     padding: 6,
     flex: 1,
     marginRight: 10,
@@ -782,7 +845,7 @@ const styles = StyleSheet.create({
   },
   printButton: {
     backgroundColor: Colors.colors.primary,
-    borderRadius: 25,
+    borderRadius: 50,
     padding: 6,
     flex: 1,
     marginLeft: 10,

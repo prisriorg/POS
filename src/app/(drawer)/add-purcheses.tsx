@@ -53,7 +53,8 @@ const AddPurcheses = () => {
     note: "",
     product: [],
     date: new Date().toISOString().split("T")[0], // Default date
-    time: `${new Date().getHours()}:${new Date().getMinutes()}`, // Default time
+    total_grand: "0.00",
+    sub_total: "0.00",
   });
   const [searchText, setSearchText] = React.useState("");
 
@@ -65,6 +66,16 @@ const AddPurcheses = () => {
   );
 
   const [allProduct, setAllProduct] = React.useState(products);
+
+  const [dataProducts, setProducts] = React.useState<
+    {
+      id: number;
+      name: string;
+      price: string;
+      quantity: string;
+      discount: string;
+    }[]
+  >([]);
 
   useEffect(() => {
     setAllProduct(products);
@@ -122,6 +133,32 @@ const AddPurcheses = () => {
       <Pressable
         onPress={() => {
           setShowProducts(false);
+          const existingProduct = dataProducts.find(
+            (product) => product.id === item.id
+          );
+          if (existingProduct) {
+            setProducts((prevProducts) =>
+              prevProducts.map((product) =>
+                product.id === item.id
+                  ? {
+                      ...product,
+                      quantity: (parseInt(product.quantity) + 1).toString(),
+                    }
+                  : product
+              )
+            );
+          } else {
+            setProducts((prevProducts) => [
+              ...prevProducts,
+              {
+                id: item.id,
+                name: item.name,
+                quantity: "1",
+                discount: "0.0",
+                price: item.price,
+              },
+            ]);
+          }
         }}
         style={{
           padding: 10,
@@ -195,7 +232,6 @@ const AddPurcheses = () => {
               flexDirection: "row",
               justifyContent: "center",
               alignItems: "center",
-
             }}
           >
             <MaterialCommunityIcons
@@ -257,6 +293,25 @@ const AddPurcheses = () => {
               <Pressable
                 onPress={() => {
                   router.replace("/(drawer)/purchases");
+                  setProducts([]);
+                  setFormData({
+                    warehouse_id: 1,
+                    expense_category_id: 1,
+                    supplier_id: 1,
+                    purchase_status: 1,
+                    full_name: "",
+                    curency_id: 1,
+                    exchange_rate: "1",
+                    amount: "1",
+                    discount: "0",
+                    shipping_cost: "0",
+                    note: "",
+                    product: [],
+                    date: new Date().toISOString().split("T")[0], // Default date
+                    sub_total:"0.00",
+                    total_grand:"0.00"
+                    
+                  });
                 }}
                 style={{
                   padding: 10,
@@ -292,25 +347,6 @@ const AddPurcheses = () => {
               value={formData.date}
             />
           </Pressable>
-
-          {/* Time Picker */}
-          {/* <Text
-            style={{
-              fontSize: 16,
-              marginBottom: 8,
-              marginTop: 16,
-            }}
-          >
-            Time
-          </Text>
-          <Pressable onPress={showTimepicker}>
-            <TextInput
-              style={styles.input}
-              placeholder="Select time"
-              editable={false}
-              value={formData.time}
-            />
-          </Pressable> */}
 
           <Text
             style={{
@@ -490,7 +526,7 @@ const AddPurcheses = () => {
               // backgroundColor: Colors.colors.primary,
               borderColor: Colors.colors.primary,
             }}
-            labelStyle={{ color: "white",}}
+            labelStyle={{ color: "white" }}
           >
             <Text
               style={{
@@ -537,56 +573,43 @@ const AddPurcheses = () => {
             </View>
             {/* Example row */}
 
-            <Pressable
-              onPress={() => {
-                setShow(true);
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  padding: 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#ccc",
-                }}
-              >
-                <Text style={{ flex: 1, textAlign: "left" }}>
-                  Example Product
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ textAlign: "right" }}>$100.00</Text>
-                  <Text
-                    style={{ textAlign: "right", color: Colors.colors.border }}
-                  >
-                    34567
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-            <Divider />
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                padding: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: "#ccc",
-              }}
-            >
-              <Text style={{ flex: 1, textAlign: "left" }}>
-                Example Product
-              </Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ textAlign: "right" }}>$100.00</Text>
-                <Text
-                  style={{ textAlign: "right", color: Colors.colors.border }}
+            {dataProducts.map((item) => (
+              <>
+                <Pressable
+                  onPress={() => {
+                    setShow(true);
+                  }}
                 >
-                  34567
-                </Text>
-              </View>
-            </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      padding: 8,
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#ccc",
+                    }}
+                  >
+                    <Text style={{ flex: 1, textAlign: "left" }}>
+                      {item?.name}
+                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ textAlign: "right" }}>
+                        {parseInt(item?.price) * parseInt(item?.quantity)}
+                      </Text>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: Colors.colors.border,
+                        }}
+                      >
+                        {item?.quantity} x {item?.price}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+                <Divider />
+              </>
+            ))}
           </View>
           <View
             style={{
@@ -612,7 +635,7 @@ const AddPurcheses = () => {
                 textAlign: "right",
               }}
             >
-              5
+              {dataProducts.length}
             </Text>
           </View>
 
@@ -701,7 +724,9 @@ const AddPurcheses = () => {
             }}
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Subtotal</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$100.00</Text>
+            <Text style={{ flex: 1, textAlign: "right" }}>
+              {formData.sub_total}
+            </Text>
           </View>
           <View
             style={{
@@ -711,7 +736,9 @@ const AddPurcheses = () => {
             }}
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Discount</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$10.00</Text>
+            <Text style={{ flex: 1, textAlign: "right" }}>
+              {formData.discount}
+            </Text>
           </View>
           <Spacer10 />
           <Divider />
@@ -742,22 +769,10 @@ const AddPurcheses = () => {
                 fontWeight: "bold",
               }}
             >
-              $10.00
+              {formData.total_grand}
             </Text>
           </View>
-          {/* <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingBottom: 8,
-              paddingTop: 4,
-            }}
-          >
-            <Text style={{ flex: 1, textAlign: "left" }}>Change</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$10.00</Text>
-          </View> */}
 
-          <Spacer20 />
           <Spacer20 />
           <Button
             mode="contained"
