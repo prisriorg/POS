@@ -103,7 +103,7 @@ const LoginScreen = () => {
                 resizeMode="contain"
               />
               <Spacer20 />
-              <Text style={{ marginBottom: 5 }}>Username</Text>
+              <Text style={styles.lebal}>Username</Text>
 
               <TextInput
                 placeholder="Username"
@@ -112,20 +112,13 @@ const LoginScreen = () => {
                 onChangeText={handleChange("email")}
                 onBlur={handleBlur("email")}
               />
+              <Text style={{ color: "red" }}>
+                {errors.email && errors.email}
+              </Text>
 
               <Spacer20 />
               <Text style={{ marginBottom: 5 }}>Password</Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#FBFBFB",
-                  paddingRight: 10,
-                  borderRadius: 8,
-                  paddingHorizontal: 0,
-                }}
-              >
+              <View style={styles.dataContainer}>
                 <TextInput
                   // Set secureTextEntry prop to hide
                   //password when showPassword is false
@@ -133,7 +126,7 @@ const LoginScreen = () => {
                   value={values.password}
                   onChangeText={handleChange("password")}
                   onBlur={handleBlur("password")}
-                  style={[styles.input, { flex: 1 }]}
+                  style={styles.input}
                   placeholder="Enter Password"
                   placeholderTextColor="#aaa"
                 />
@@ -147,6 +140,9 @@ const LoginScreen = () => {
                   onPress={toggleShowPassword}
                 />
               </View>
+              <Text style={{ color: "red" }}>
+                {errors.password && errors.password}
+              </Text>
               <Spacer20 />
 
               <Text style={{ marginBottom: 5 }}>Domain</Text>
@@ -157,32 +153,29 @@ const LoginScreen = () => {
                 onChangeText={handleChange("domain")}
                 onBlur={handleBlur("domain")}
               />
-
-              <Spacer20 />
-              <Text style={{ textAlign: "center", color: "red" }}>
-                {errors.email && touched.email
-                  ? errors.email
-                  : errors.password && touched.password
-                  ? errors.password
-                  : errors.domain}
+              <Text style={{ color: "red" }}>
+                {errors.domain && errors.domain}
               </Text>
+
               <Spacer40 />
-              <Button
-                mode="contained"
-                onPress={() => handleSubmit()}
+              <View
+                // title="Login"
+                // onPress={() => handleSubmit()}
+                // color="#090A78"
                 style={styles.button}
               >
                 <Text
                   style={{
                     color: "#fff",
-                    fontSize: 16,
-                    fontWeight: "bold",
                     textAlign: "center",
+                    fontSize: 16,
+                    paddingVertical: 10,
                   }}
+                  onPress={() => handleSubmit()}
                 >
                   Login
                 </Text>
-              </Button>
+              </View>
             </View>
           )}
         </Formik>
@@ -200,12 +193,28 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#fff",
   },
+  lebal: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "#000",
+  },
+  dataContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FBFBFB",
+    paddingRight: 10,
+    borderRadius: 8,
+    paddingHorizontal: 0,
+  },
   image: { width: 200, height: 150, alignSelf: "center" },
   scroll: { flex: 1, backgroundColor: "#fff", height: "100%", width: "100%" },
   button: {
     backgroundColor: "#090A78",
+    borderRadius: 100,
   },
   input: {
+    flex: 1,
     borderRadius: 8,
     padding: 10,
     height: 40,

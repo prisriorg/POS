@@ -11,8 +11,13 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import Checkbox from "expo-checkbox";
-import React, { useState, useEffect } from "react";
-import { Stack, useRouter } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { EvilIcons, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/src/constants/Colors";
 import { Dropdown } from "react-native-element-dropdown";
@@ -26,7 +31,7 @@ import {
 } from "@/src/utils/GetData";
 import * as ImagePicker from "expo-image-picker";
 import { ScrollView } from "react-native-gesture-handler";
-import { BASE_URL } from "@/src/utils/config";
+import { BASE_URL, IMAGE_BASE_URL_LARGE } from "@/src/utils/config";
 import { ImagePickerAsset } from "expo-image-picker";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 
@@ -36,7 +41,7 @@ interface HSCodes {
   description: string;
 }
 
-const AddProduct = () => {
+const EditProduct = () => {
   const router = useRouter();
   const visualFeedback = useVisualFeedback();
   const { hscodes, brands, categories, taxes, warehouses } = useAppSelector(
@@ -58,6 +63,7 @@ const AddProduct = () => {
   const [warehouseStoke, setWarehouseStoke] = useState<
     { id: number; price: string }[]
   >([]);
+  const prms = useLocalSearchParams();
   const [HSCodes, setHSCodes] = useState<HSCodes[]>(hscodes || []);
   const [image, setImage] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -94,6 +100,71 @@ const AddProduct = () => {
     last_date: "2025-05-31",
   });
 
+  useFocusEffect(
+    useCallback(() => {
+      if (prms.id) {
+        getProduct(prms.id as string);
+      }
+      return () => {
+        // Any cleanup code here
+      };
+    }, [prms.id, user?.id, domain])
+  );
+  const getProduct = async (id: string) => {
+    try {
+      // Show loading feedback
+      visualFeedback.showLoadingBackdrop();
+      // Fetch product details from API using the id
+      await fetch(
+        `${BASE_URL}product/${id}?user_id=${user?.id}&tenant_id=${domain}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          // Handle the fetched product data
+          setFormData((prev) => ({
+            name: data.product.name,
+            type: data.product.type,
+            code: data.product.code,
+            barcode_symbology: data.product.barcode_symbology,
+            brand_id: data.product.brand_id,
+            category_id: data.product.category_id,
+            hs_code: data.product.hs_code,
+            unit_id: data.product.unit_id,
+            sale_unit_id: data.product.sale_unit_id,
+            purchase_unit_id: data.product.purchase_unit_id,
+            cost: data.product.cost?.toString(),
+            price: data.product.price?.toString(),
+            wholesale_price: data.product.wholesale_price?.toString(),
+            tax_id: data.product.tax_id,
+            tax_method: data.product.tax_method?.toString(),
+            qty: parseInt(data.product.qty),
+            alert_quantity: data.product.alert_quantity?.toString(),
+            daily_sale_objective: data.product.daily_sale_objective?.toString(),
+            is_initial_stock:
+              parseInt(data.product.is_initial_stock) === 1 ? true : false,
+            featured: parseInt(data.product.featured) === 1 ? true : false,
+            is_embeded: parseInt(data.product.is_embeded) === 1 ? true : false,
+            product_details: data.product.description,
+          }));
+
+          setImage({
+            uri: IMAGE_BASE_URL_LARGE + data.product.image,
+          } as ImagePickerAsset);
+
+          // setProduct(data.product);
+          // console.log("Product data:", data.product);
+          // setGetVariants(data.lims_product_variant_data);
+          visualFeedback.hideLoadingBackdrop();
+        })
+        .catch((error) => {
+          console.error("Error fetching product:", error);
+          visualFeedback.hideLoadingBackdrop();
+        });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -107,9 +178,9 @@ const AddProduct = () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      // allowsEditing: true,
       // base64: true,
-      aspect: [4, 3],
+      // aspect: [4, 3],
       quality: 1,
     });
 
@@ -212,7 +283,7 @@ const AddProduct = () => {
       console.log("Form Data: ", formDataObj);
 
       const response = await fetch(
-        `${BASE_URL}save/product?user_id=${user?.id}&tenant_id=${domain}`,
+        `${BASE_URL}product/update/${prms?.id}?user_id=${user?.id}&tenant_id=${domain}`,
         {
           method: "POST",
           headers: {
@@ -227,7 +298,7 @@ const AddProduct = () => {
         visualFeedback.hideLoadingBackdrop();
         Alert.alert(
           "Success",
-          "Product added successfully",
+          "Product Updated successfully",
           [
             {
               text: "OK",
@@ -275,6 +346,7 @@ const AddProduct = () => {
       }
     } catch (error) {
       console.log("Error: ", error);
+    } finally {
       visualFeedback.hideLoadingBackdrop();
     }
   };
@@ -329,34 +401,6 @@ const AddProduct = () => {
               <Pressable
                 onPress={() => {
                   router.replace("/(drawer)/products-inventory");
-                  setFormData({
-                    promotional: false,
-                    type: "",
-                    productName: "",
-                    productCode: "",
-                    hsCode: "",
-                    barcodeSymbology: "",
-                    brand: "",
-                    category: "",
-                    unit: "",
-                    saleUnit: "",
-                    purchaseUnit: "",
-                    buyingPrice: "",
-                    sellingPrice: "",
-                    wholesalePrice: "",
-                    dailySaleObjective: "",
-                    lowStockAlert: "",
-                    tax: "",
-                    taxMethod: "inclusive",
-                    isActive: false,
-                    description: "",
-                    image: null,
-                    IMEI: false,
-                    productVariants: false,
-                    promotionalPrice: false,
-                    differentWarehouses: false,
-                    expirationDate: false,
-                  });
                 }}
                 style={{
                   padding: 10,
@@ -388,8 +432,9 @@ const AddProduct = () => {
                 source={{ uri: image.uri }}
                 style={{
                   height: Dimensions.get("window").height * 0.25,
-                  width: Dimensions.get("window").height * 0.25,
+                  width: Dimensions.get("window").width,
                 }}
+                contentFit="contain"
               />
             ) : (
               // <>
@@ -425,7 +470,8 @@ const AddProduct = () => {
             style={styles.input}
             data={productTypes}
             labelField="label"
-            valueField="id"
+            valueField="value"
+            value={formData.type}
             placeholderStyle={styles.placeholderStyle}
             placeholder="Select Product Type"
             onChange={(val) => updateFormData("type", val.value)}
@@ -474,9 +520,8 @@ const AddProduct = () => {
           <TextInput
             style={styles.input}
             placeholder="Enter Or Select HS Code"
-            value={selectedHSCode.hs_code}
+            value={formData.hs_code}
             editable={false}
-            pointerEvents="none"
             selectionColor="lightgrey"
           />
           <Button
@@ -592,6 +637,7 @@ const AddProduct = () => {
             style={styles.input}
             placeholder="Enter Buying Price"
             keyboardType="numeric"
+            value={formData.cost}
             onChangeText={(text) => updateFormData("cost", text)}
             selectionColor="lightgrey"
           />
@@ -604,6 +650,7 @@ const AddProduct = () => {
             style={styles.input}
             keyboardType="numeric"
             placeholder="Enter Selling Price"
+            value={formData.price}
             onChangeText={(text) => updateFormData("price", text)}
             selectionColor="lightgrey"
           />
@@ -614,6 +661,7 @@ const AddProduct = () => {
             style={styles.input}
             placeholder="Enter Wholesale Price"
             keyboardType="numeric"
+            value={formData.wholesale_price}
             onChangeText={(text) => updateFormData("wholesale_price", text)}
             selectionColor="lightgrey"
           />
@@ -625,6 +673,7 @@ const AddProduct = () => {
             style={styles.input}
             placeholder="Enter Daily Sale Objective"
             keyboardType="numeric"
+            value={formData.daily_sale_objective}
             onChangeText={(text) =>
               updateFormData("daily_sale_objective", text)
             }
@@ -635,6 +684,7 @@ const AddProduct = () => {
           <Text style={styles.label}>Low Stock Alert</Text>
           <TextInput
             style={styles.input}
+            value={formData.alert_quantity}
             placeholder="Enter Low Stock Alert"
             keyboardType="numeric"
             onChangeText={(text) => updateFormData("alert_quantity", text)}
@@ -653,7 +703,7 @@ const AddProduct = () => {
             }))}
             value={formData.tax_id}
             labelField="label"
-            valueField="id"
+            valueField="value"
             placeholder="Select Tax"
             placeholderStyle={styles.placeholderStyle}
             onChange={(val) => updateFormData("tax_id", val.value)}
@@ -969,7 +1019,7 @@ const AddProduct = () => {
   );
 };
 
-export default AddProduct;
+export default EditProduct;
 
 const styles = StyleSheet.create({
   container: {

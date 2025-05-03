@@ -1,9 +1,15 @@
-import { useAppSelector } from "@/src/store/reduxHook";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
+import { setDashboard } from "@/src/store/reducers/homeReducer";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
+import { BASE_URL } from "@/src/utils/config";
 import { Spacer20 } from "@/src/utils/Spacing";
 import { AntDesign, Entypo, Feather, Fontisto } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+
+import NetInfo from '@react-native-community/netinfo';
 
 // individual metrics for a timeframe
 export interface PeriodMetrics {
@@ -14,7 +20,7 @@ export interface PeriodMetrics {
 }
 
 export default function HomeScreen() {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user,domain } = useAppSelector((state) => state.auth);
   const { currencies, warehouses, dashboard } = useAppSelector(
     (state) => state.home
   );
@@ -40,11 +46,15 @@ export default function HomeScreen() {
       value: "year",
     },
   ];
+
   const [dateIs, setDateIs] = useState("today");
 
   const [dashboardData, setDashboardData] = useState(dashboard || {});
   const [warehouse, setWarehouse] = useState(warehouses[0]?.id || 1);
   const [currency, setCurrency] = useState("USD");
+  const visualFeedback = useVisualFeedback();
+  const dispatch = useAppDispatch();
+
 
   useEffect(() => {
     setCurrency(currencies[0]?.code || "USD");
@@ -58,6 +68,36 @@ export default function HomeScreen() {
     4: { Icon: AntDesign, name: "Trophy", color: "blue" },
   };
 
+  const getDashboard = async (warehouse_id: string) => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const dashboard = await AsyncStorage.getItem('getDashboard');
+      if (dashboard) {
+        dispatch(setDashboard(JSON.parse(dashboard)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}dashboard?user_id=${user?.id}&tenant_id=${domain}&warehouse_id=${warehouse_id}`,
+        {
+          method: 'GET',
+        },
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === 'success') {
+          setDashboardData(result.data);
+          await AsyncStorage.setItem('getDashboard', JSON.stringify(result));
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
   const itemRenderer = (item: { id: number; name: string; value: number }) => {
       const { Icon, name: iconName, color } = ICONS[item.id] || {};
 
@@ -141,7 +181,10 @@ export default function HomeScreen() {
               labelField="label"
               valueField="value"
               placeholder="Select Warehouse"
-              onChange={(item) => setWarehouse(item.value)}
+              onChange={(item) => {
+                setWarehouse(item.value);
+                getDashboard(item.value);
+              }}
             />
           </View>
         </View>

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   Image,
   ScrollView,
   Pressable,
   Modal,
+  Alert,
 } from "react-native";
 import {
   Text,
@@ -15,13 +15,12 @@ import {
   Button,
   Chip,
   Divider,
-  FAB,
-  Card,
-  IconButton,
   Menu,
 } from "react-native-paper";
+
+import NetInfo from "@react-native-community/netinfo";
 import { useAppSelector, useAppDispatch } from "@/src/store/reduxHook";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import {
   AntDesign,
@@ -32,9 +31,11 @@ import {
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import { Spacer20 } from "@/src/utils/Spacing";
-import { IMAGE_BASE_URL } from "@/src/utils/config";
+import { BASE_URL, IMAGE_BASE_URL } from "@/src/utils/config";
 import { Colors } from "@/src/constants/Colors";
-import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
+import DeleteProductDialog from "@/src/components/Delete";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setProducts } from "@/src/store/reducers/homeReducer";
 
 const ProductsInventoryScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,13 +51,55 @@ const ProductsInventoryScreen = () => {
     brand: string;
     stock: string;
   }>({
-    category: categories[0]?.name,
-    brand: brands[0]?.title,
-    stock: stoks[0],
+    category: "",
+    brand: "",
+    stock: "",
   });
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteData, setDeleteData] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const router = useRouter();
   const { user, domain } = useAppSelector((state) => state.auth);
+  const visualFeedback = useVisualFeedback();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  useFocusEffect(
+    useCallback(() => {
+      getAllProducts();
+      return () => {
+        // Any cleanup code here
+      };
+    }, [user?.id, domain])
+  );
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}product/delete/${deleteData}?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Product deleted successfully:", data);
+        getAllProducts();
+        Alert.alert("Success", "Product deleted successfully");
+      } else {
+        console.log("Error deleting product:", data.message);
+      }
+    } catch (error) {
+      console.log("Error deleting product:", error);
+    }
+    // Call your delete API here using deleteData
+    // After successful deletion, you can update the state or refetch data
+    setShowDeleteDialog(false);
+  };
 
   const applyFilters = () => {
     let filtered = products;
@@ -99,12 +142,42 @@ const ProductsInventoryScreen = () => {
 
   useEffect(() => {
     setFilteredProducts(products);
-    setFilter({
-      category: categories[0]?.name,
-      brand: brands[0]?.title,
-      stock: stoks[0],
-    });
   }, [products]);
+
+  const getAllProducts = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const products = await AsyncStorage.getItem("getProducts");
+      if (products) {
+        dispatch(setProducts(JSON.parse(products)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}products?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setProducts(result?.products));
+          setFilteredProducts(result?.products);
+          await AsyncStorage.setItem(
+            "getProducts",
+            JSON.stringify(result?.products)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
 
   const renderProductItem = ({
     item,
@@ -121,7 +194,7 @@ const ProductsInventoryScreen = () => {
   }) => {
     const isMenuOpen = openMenuId === item.id;
     return (
-      <View
+      <Pressable
         style={{
           marginHorizontal: "2%",
           marginVertical: "2%",
@@ -132,126 +205,134 @@ const ProductsInventoryScreen = () => {
           borderColor: "#cecece",
           width: "48%",
         }}
+        onPress={() => {
+          router.push(`/(drawer)/view-product?id=${item.id}`);
+        }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <Image
-            source={{
-              uri: `${IMAGE_BASE_URL}${item?.image}`,
-            }}
-            style={{
-              flex: 1,
-              height: 120,
-              borderTopLeftRadius: 6,
-              borderTopRightRadius: 6,
-            }}
-            resizeMode="stretch"
-          />
-        </View>
-
-        <View
-          style={{
-            paddingHorizontal: 10,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              color: "black",
-            }}
-          >
-            {item.name}
-          </Text>
-          <Text
-            style={{
-              color: "#3D3C3C",
-              fontSize: 14,
-            }}
-          >
-            Code/SKU: {item.code}
-          </Text>
-          <Text
-            style={{
-              color: "#3D3C3C",
-              fontSize: 14,
-            }}
-          >
-            In Stock: {item.qty}
-          </Text>
-
+        <View>
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: 5,
-              marginBottom: 5,
+            }}
+          >
+            <Image
+              source={{
+                uri: `${IMAGE_BASE_URL}${item?.image}`,
+              }}
+              style={{
+                flex: 1,
+                height: 120,
+                borderTopLeftRadius: 6,
+                borderTopRightRadius: 6,
+              }}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View
+            style={{
+              paddingHorizontal: 10,
             }}
           >
             <Text
               style={{
                 fontSize: 18,
-                color: "black",
                 fontWeight: "bold",
+                color: "black",
               }}
             >
-              ${item.price.toFixed(2)}
+              {item.name}
+            </Text>
+            <Text
+              style={{
+                color: "#3D3C3C",
+                fontSize: 14,
+              }}
+            >
+              Code/SKU: {item.code}
+            </Text>
+            <Text
+              style={{
+                color: "#3D3C3C",
+                fontSize: 14,
+              }}
+            >
+              In Stock: {item.qty}
             </Text>
 
-            
-
-            <Menu
-              visible={isMenuOpen}
-              onDismiss={() => setOpenMenuId(null)}
-              anchor={
-                <Pressable onPress={() => setOpenMenuId(item.id)}>
-                  <MaterialCommunityIcons
-                    name="dots-horizontal"
-                    size={24}
-                    color="black"
-                  />
-                </Pressable>
-              }
+            <View
               style={{
-                backgroundColor: "#fff",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: 5,
+                marginBottom: 5,
               }}
             >
-              <Menu.Item
-                onPress={() => {
-                  console.log("Edit item", item.id);
-                  setOpenMenuId(null);
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: "black",
+                  fontWeight: "bold",
                 }}
-                title="Edit"
-                leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
-                )}
+              >
+                ${item.price.toFixed(2)}
+              </Text>
+
+              <Menu
+                contentStyle={{
+                  backgroundColor: "#fff",
+                }}
+                visible={isMenuOpen}
+                onDismiss={() => setOpenMenuId(null)}
+                anchor={
+                  <Pressable onPress={() => setOpenMenuId(item.id)}>
+                    <MaterialCommunityIcons
+                      name="dots-horizontal"
+                      size={24}
+                      color="black"
+                    />
+                  </Pressable>
+                }
                 style={{
                   backgroundColor: "#fff",
                 }}
-              />
-              <Divider />
-              <Menu.Item
-                onPress={() => {
-                  console.log("Details", item.id);
-                  setOpenMenuId(null);
-                }}
-                style={{
-                  backgroundColor: "#fff",
-                }}
-                title="Details"
-                leadingIcon={(prms) => (
-                  <MaterialIcons name="info" size={20} color={prms.color} />
-                )}
-              />
-            </Menu>
+              >
+                <Menu.Item
+                  onPress={() => {
+                    router.push(`/(drawer)/edit-product?id=${item.id}`);
+                    setOpenMenuId(null);
+                  }}
+                  title="Edit"
+                  leadingIcon={(prms) => (
+                    <MaterialIcons name="edit" size={20} color={prms.color} />
+                  )}
+                  style={{
+                    backgroundColor: "#fff",
+                  }}
+                />
+                <Divider />
+                <Menu.Item
+                  onPress={() => {
+                    setShowDeleteDialog(true);
+                    setDeleteData(item.id.toString());
+
+                    setOpenMenuId(null);
+                  }}
+                  style={{
+                    backgroundColor: "#fff",
+                  }}
+                  title="Delete"
+                  leadingIcon={(prms) => (
+                    <MaterialIcons name="info" size={20} color={prms.color} />
+                  )}
+                />
+              </Menu>
+            </View>
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   };
   return (
@@ -274,11 +355,8 @@ const ProductsInventoryScreen = () => {
                 const filtered = products.filter(
                   (product: any) =>
                     product.name.toLowerCase().includes(val.toLowerCase()) ||
-                    product.code.toLowerCase().includes(val.toLowerCase()) ||
-                    product.hs_code.toLowerCase().includes(val.toLowerCase()) ||
-                    product.barcode_symbology
-                      .toLowerCase()
-                      .includes(val.toLowerCase())
+                    product.code.includes(val) ||
+                    product.hs_code.includes(val)
                 );
                 setFilteredProducts(filtered);
               }}
@@ -523,6 +601,19 @@ const ProductsInventoryScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <DeleteProductDialog
+        visible={showDeleteDialog}
+        onDismiss={() => {
+          console.log("Delete dialog dismissed");
+          setShowDeleteDialog(false);
+          setDeleteData("");
+        }}
+        onDelete={() => {
+          setShowDeleteDialog(false);
+          handleDelete();
+        }}
+      />
     </View>
   );
 };
