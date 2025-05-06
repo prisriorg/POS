@@ -1,9 +1,7 @@
 import { CustomDrawerContent } from "@/src/components/CustomDrawerContent";
 import { Colors } from "@/src/constants/Colors";
-import { FontAwesome6 } from "@expo/vector-icons";
 import { Drawer } from "expo-router/drawer";
 import React from "react";
-import { Pressable } from "react-native";
 
 export default function TabsLayout() {
   return (

@@ -49,13 +49,13 @@ const ViewDeposit = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (prms.id) {
-        getData(prms.id as string);
+      if (prms?.id) {
+        getData(prms?.id as string);
       }
       return () => {
         // Any cleanup code here
       };
-    }, [prms.id, user?.id, domain])
+    }, [prms?.id, user?.id, domain])
   );
 
   const itemrender = ({ item }: any) => {

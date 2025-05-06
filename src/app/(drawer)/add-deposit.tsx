@@ -43,7 +43,7 @@ const AddDeposit = () => {
       );
       const result = await response.json();
       if (response.status === 200) {
-        router.push("/(drawer)/view-deposit");
+        router.push(`/(drawer)/view-deposit?id=${prms?.id}`);
       }
     } catch (err) {
     } finally {

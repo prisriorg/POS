@@ -97,9 +97,6 @@ export default function TabLayout() {
     }
   }
 
-
-
-
   const getDashboard = async () => {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
@@ -180,7 +177,7 @@ export default function TabLayout() {
     try {
       visualFeedback.showLoadingBackdrop();
       const response = await fetch(
-        `${BASE_URL}sales?user_id=${user?.id}&tenant_id=${domain}`,
+        `${BASE_URL}sales?user_id=${user?.id}&tenant_id=${domain}&start=0&length=20`,
         {
           method: "GET",
         }

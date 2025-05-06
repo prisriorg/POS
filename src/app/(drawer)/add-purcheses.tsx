@@ -9,13 +9,18 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   AntDesign,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import { Button, Divider, Searchbar } from "react-native-paper";
@@ -39,22 +44,41 @@ const AddPurcheses = () => {
   const [date, setDate] = React.useState(new Date());
   const [show, setShow] = React.useState(false);
   const [showProducts, setShowProducts] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState(0);
   const [formData, setFormData] = React.useState({
-    warehouse_id: 1,
-    expense_category_id: 1,
-    supplier_id: 1,
-    purchase_status: 1,
-    full_name: "",
-    curency_id: 1,
+    created_at: new Date().toISOString().split("T")[0],
+    warehouse_id: "1",
+    supplier_id: "1",
+    status: "1",
+    currency_id: "1",
     exchange_rate: "1",
-    amount: "1",
-    discount: "0",
-    shipping_cost: "0",
-    note: "",
-    product: [],
-    date: new Date().toISOString().split("T")[0], // Default date
-    total_grand: "0.00",
-    sub_total: "0.00",
+    product_code_name: null,
+    qty: ["4"],
+    recieved: ["4"],
+    batch_no: [null],
+    expired_date: [null],
+    // product_code: [" kg/-62502311 "],
+    product_id: ["2"],
+    purchase_unit: ["piece"],
+    net_unit_cost: ["0.43"],
+    discount: ["0.00"],
+    tax_rate: ["15.00"],
+    tax: ["0.26"],
+    subtotal: ["2.00"],
+    imei_number: [null],
+    total_qty: "4",
+    total_discount: "0.00",
+    total_tax: "0.26",
+    total_cost: "2.00",
+    item: "1",
+    order_tax: "0.00",
+    grand_total: "2.00",
+    paid_amount: "0.00",
+    payment_status: "1",
+    order_tax_rate: "0",
+    order_discount: "1",
+    shipping_cost: "1",
+    note: "test",
   });
   const [searchText, setSearchText] = React.useState("");
 
@@ -74,9 +98,13 @@ const AddPurcheses = () => {
       price: string;
       quantity: string;
       discount: string;
+      code: string;
+      tax_amount: string;
+      tax_rate: string;
     }[]
   >([]);
 
+  
   useEffect(() => {
     setAllProduct(products);
   }, [products]);
@@ -87,22 +115,7 @@ const AddPurcheses = () => {
       setDate(selectedDate);
       setFormData((prevState) => ({
         ...prevState,
-        date: selectedDate.toISOString().split("T")[0],
-      }));
-    }
-  };
-
-  // Handle time change
-  const onTimeChange = (event: any, selectedTime: any) => {
-    if (selectedTime) {
-      const hours = selectedTime.getHours();
-      const minutes = selectedTime.getMinutes();
-      const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes
-        .toString()
-        .padStart(2, "0")}`;
-      setFormData((prevState) => ({
-        ...prevState,
-        time: formattedTime,
+        created_at: selectedDate.toISOString().split("T")[0],
       }));
     }
   };
@@ -117,16 +130,6 @@ const AddPurcheses = () => {
     });
   };
 
-  // Show time picker
-  const showTimepicker = () => {
-    DateTimePickerAndroid.open({
-      value: date,
-      onChange: onTimeChange,
-      mode: "time",
-      is24Hour: true,
-    });
-  };
-
   // product item renderer
   const renderProductItem = ({ item }: any) => {
     return (
@@ -136,13 +139,21 @@ const AddPurcheses = () => {
           const existingProduct = dataProducts.find(
             (product) => product.id === item.id
           );
+
           if (existingProduct) {
             setProducts((prevProducts) =>
               prevProducts.map((product) =>
                 product.id === item.id
                   ? {
                       ...product,
-                      quantity: (parseInt(product.quantity) + 1).toString(),
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      discount: item.discount,
+                      code: item.code,
+                      tax_amount: item.tax_amount,
+                      tax_rate: item.tax_percentage,
+                      quantity: (Number(product.quantity) + 1).toString(),
                     }
                   : product
               )
@@ -156,9 +167,14 @@ const AddPurcheses = () => {
                 quantity: "1",
                 discount: "0.0",
                 price: item.price,
+                code: item.code,
+                tax_amount: item.tax_amount,
+                tax_rate: item.tax_percentage,
               },
             ]);
           }
+
+          console.log(products[0]);
         }}
         style={{
           padding: 10,
@@ -249,6 +265,42 @@ const AddPurcheses = () => {
     try {
       visualFeedback.showLoadingBackdrop();
 
+      console.log(
+        "Form Data",
+        JSON.stringify({
+          ...formData,
+
+          product_code_name: dataProducts.map((item) => item.name),
+          qty: dataProducts.map((item) => item.quantity),
+          product_id: dataProducts.map((item) => item.id),
+          net_unit_cost: dataProducts.map((item) => item.price),
+          discount: dataProducts.map((item) => item.discount),
+          subtotal: dataProducts.map(
+            (item) => parseInt(item.price) * parseInt(item.quantity)
+          ),
+          product_code: dataProducts.map((item) => item.code),
+          total_qty: dataProducts.reduce(
+            (acc, item) => acc + parseInt(item.quantity),
+            0
+          ),
+          total_discount: dataProducts.reduce(
+            (acc, item) => acc + parseFloat(item.discount),
+            0
+          ),
+          total_cost: dataProducts.reduce(
+            (acc, item) => acc + parseInt(item.price) * parseInt(item.quantity),
+            0
+          ),
+          grand_total: dataProducts.reduce(
+            (acc, item) =>
+              acc +
+              parseInt(item.price) * parseInt(item.quantity) -
+              parseFloat(item.discount),
+            0
+          ),
+        })
+      );
+
       const apiUrl = `${BASE_URL}save/purchase?user_id=${user.id}&tenant_id=${domain}`;
 
       const response = await fetch(apiUrl, {
@@ -257,16 +309,54 @@ const AddPurcheses = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(
+          {
+            ...formData,
+
+            ...formData,
+
+            product_code_name: dataProducts.map((item) => item.name),
+            qty: dataProducts.map((item) => item.quantity),
+            product_id: dataProducts.map((item) => item.id),
+            net_unit_cost: dataProducts.map((item) => item.price),
+            discount: dataProducts.map((item) => item.discount),
+            subtotal: dataProducts.map(
+              (item) => parseInt(item.price) * parseInt(item.quantity)
+            ),
+            product_code: dataProducts.map((item) => item.code),
+            total_qty: dataProducts.reduce(
+              (acc, item) => acc + parseInt(item.quantity),
+              0
+            ),
+            total_discount: dataProducts.reduce(
+              (acc, item) => acc + parseFloat(item.discount),
+              0
+            ),
+            total_cost: dataProducts.reduce(
+              (acc, item) =>
+                acc + parseInt(item.price) * parseInt(item.quantity),
+              0
+            ),
+            grand_total: dataProducts.reduce(
+              (acc, item) =>
+                acc +
+                parseInt(item.price) * parseInt(item.quantity) -
+                parseFloat(item.discount),
+              0
+            ),
+          },
+          null,
+          2
+        ),
       });
       const data = await response.json();
       console.log(data);
       if (data.status === "success") {
-        alert("Expense added successfully");
+        alert("Purchese added successfully");
         visualFeedback.hideLoadingBackdrop();
-        router.replace("/(drawer)/expenses");
-      } else if (data.status === "error") {
-        alert(data.message);
+        router.replace("/(drawer)/purchases");
+      }  {
+        alert(JSON.stringify(data.error||data.errors));
         visualFeedback.hideLoadingBackdrop();
       }
     } catch (error) {
@@ -294,24 +384,6 @@ const AddPurcheses = () => {
                 onPress={() => {
                   router.replace("/(drawer)/purchases");
                   setProducts([]);
-                  setFormData({
-                    warehouse_id: 1,
-                    expense_category_id: 1,
-                    supplier_id: 1,
-                    purchase_status: 1,
-                    full_name: "",
-                    curency_id: 1,
-                    exchange_rate: "1",
-                    amount: "1",
-                    discount: "0",
-                    shipping_cost: "0",
-                    note: "",
-                    product: [],
-                    date: new Date().toISOString().split("T")[0], // Default date
-                    sub_total:"0.00",
-                    total_grand:"0.00"
-                    
-                  });
                 }}
                 style={{
                   padding: 10,
@@ -344,7 +416,7 @@ const AddPurcheses = () => {
               style={styles.input}
               placeholder="Select date"
               editable={false}
-              value={formData.date}
+              value={formData.created_at}
             />
           </Pressable>
 
@@ -416,12 +488,12 @@ const AddPurcheses = () => {
             style={styles.input}
             placeholder="Purchase status"
             data={purchaseStatus}
-            value={formData.expense_category_id}
+            value={formData.status}
             labelField="label"
             valueField="value"
             onChange={(item) => {
               setFormData((prevState) => {
-                return { ...prevState, expense_category_id: item.value };
+                return { ...prevState, status: item.value };
               });
             }}
           />
@@ -478,12 +550,12 @@ const AddPurcheses = () => {
                     value: item.id,
                   };
                 })}
-                value={formData.curency_id}
+                value={formData.currency_id}
                 labelField="label"
                 valueField="value"
                 onChange={(item) => {
                   setFormData((prevState) => {
-                    return { ...prevState, curency_id: item.value };
+                    return { ...prevState, currency_id: item.value };
                   });
                 }}
               />
@@ -504,7 +576,7 @@ const AddPurcheses = () => {
                 Exchange Rate
               </Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { textAlign: "right" }]}
                 keyboardType="numeric"
                 onChangeText={(text) => {
                   setFormData((prevState) => {
@@ -525,6 +597,8 @@ const AddPurcheses = () => {
             style={{
               // backgroundColor: Colors.colors.primary,
               borderColor: Colors.colors.primary,
+              borderWidth: 1,
+              borderRadius: 8,
             }}
             labelStyle={{ color: "white" }}
           >
@@ -546,7 +620,6 @@ const AddPurcheses = () => {
             <View
               style={{
                 flexDirection: "row",
-                backgroundColor: "#ccc",
                 padding: 8,
               }}
             >
@@ -573,11 +646,12 @@ const AddPurcheses = () => {
             </View>
             {/* Example row */}
 
-            {dataProducts.map((item) => (
+            {dataProducts.map((item, index) => (
               <>
                 <Pressable
                   onPress={() => {
                     setShow(true);
+                    setSelectedProduct(index);
                   }}
                 >
                   <View
@@ -585,8 +659,8 @@ const AddPurcheses = () => {
                       flexDirection: "row",
                       justifyContent: "space-between",
                       padding: 8,
-                      borderBottomWidth: 1,
-                      borderBottomColor: "#ccc",
+                      borderTopWidth: 1,
+                      borderTopColor: "#ccc",
                     }}
                   >
                     <Text style={{ flex: 1, textAlign: "left" }}>
@@ -594,7 +668,9 @@ const AddPurcheses = () => {
                     </Text>
                     <View style={{ flex: 1 }}>
                       <Text style={{ textAlign: "right" }}>
-                        {parseInt(item?.price) * parseInt(item?.quantity)}
+                        {(Number(item?.price) * Number(item?.quantity)).toFixed(
+                          2
+                        )}
                       </Text>
                       <Text
                         style={{
@@ -602,7 +678,7 @@ const AddPurcheses = () => {
                           color: Colors.colors.border,
                         }}
                       >
-                        {item?.quantity} x {item?.price}
+                        {item?.quantity} x {Number(item?.price).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -725,7 +801,13 @@ const AddPurcheses = () => {
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Subtotal</Text>
             <Text style={{ flex: 1, textAlign: "right" }}>
-              {formData.sub_total}
+              {dataProducts
+                .reduce(
+                  (acc, item) =>
+                    acc + Number(item.price) * Number(item.quantity),
+                  0
+                )
+                .toFixed(2)}
             </Text>
           </View>
           <View
@@ -737,7 +819,9 @@ const AddPurcheses = () => {
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Discount</Text>
             <Text style={{ flex: 1, textAlign: "right" }}>
-              {formData.discount}
+              {dataProducts
+                .reduce((acc, item) => acc + Number(item.discount), 0)
+                .toFixed(2)}
             </Text>
           </View>
           <Spacer10 />
@@ -769,7 +853,13 @@ const AddPurcheses = () => {
                 fontWeight: "bold",
               }}
             >
-              {formData.total_grand}
+              {dataProducts
+                .reduce(
+                  (acc, item) =>
+                    acc + Number(item.price) * Number(item.quantity),
+                  0
+                )
+                .toFixed(2)}
             </Text>
           </View>
 
@@ -867,13 +957,17 @@ const AddPurcheses = () => {
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Cerevita Choco Malt"
+                placeholder="Enter product name"
                 onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, name: text }
+                        : product
+                    )
+                  );
                 }}
-                value={formData.full_name}
+                value={dataProducts[selectedProduct]?.name}
               />
               <Text
                 style={{
@@ -889,11 +983,15 @@ const AddPurcheses = () => {
                 style={styles.input}
                 placeholder="0"
                 onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, price: text }
+                        : product
+                    )
+                  );
                 }}
-                value={formData.full_name}
+                value={dataProducts[selectedProduct]?.price}
               />
               <Text
                 style={{
@@ -909,11 +1007,15 @@ const AddPurcheses = () => {
                 style={styles.input}
                 placeholder="1"
                 onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, quantity: text }
+                        : product
+                    )
+                  );
                 }}
-                value={formData.full_name}
+                value={dataProducts[selectedProduct]?.quantity}
               />
               <Text
                 style={{
@@ -929,11 +1031,15 @@ const AddPurcheses = () => {
                 style={styles.input}
                 placeholder="0.0"
                 onChangeText={(text) => {
-                  setFormData((prevState) => {
-                    return { ...prevState, full_name: text };
-                  });
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, discount: text }
+                        : product
+                    )
+                  );
                 }}
-                value={formData.full_name}
+                value={dataProducts[selectedProduct]?.discount}
               />
               <Spacer20 />
               <Button

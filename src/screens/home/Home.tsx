@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo from "@react-native-community/netinfo";
 
 // individual metrics for a timeframe
 export interface PeriodMetrics {
@@ -20,7 +20,7 @@ export interface PeriodMetrics {
 }
 
 export default function HomeScreen() {
-  const { user,domain } = useAppSelector((state) => state.auth);
+  const { user, domain } = useAppSelector((state) => state.auth);
   const { currencies, warehouses, dashboard } = useAppSelector(
     (state) => state.home
   );
@@ -55,23 +55,16 @@ export default function HomeScreen() {
   const visualFeedback = useVisualFeedback();
   const dispatch = useAppDispatch();
 
-
   useEffect(() => {
     setCurrency(currencies[0]?.code || "USD");
     setWarehouse(warehouses[0]?.id || 1);
     setDashboardData(dashboard);
   }, [user, currencies, warehouses, dashboard]);
-  const ICONS = {
-    1: { Icon: Feather, name: "bar-chart", color: "purple" },
-    2: { Icon: Fontisto, name: "arrow-return-left", color: "orange" },
-    3: { Icon: Entypo, name: "loop", color: "darkgreen" },
-    4: { Icon: AntDesign, name: "Trophy", color: "blue" },
-  };
 
   const getDashboard = async (warehouse_id: string) => {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
-      const dashboard = await AsyncStorage.getItem('getDashboard');
+      const dashboard = await AsyncStorage.getItem("getDashboard");
       if (dashboard) {
         dispatch(setDashboard(JSON.parse(dashboard)));
       }
@@ -82,14 +75,14 @@ export default function HomeScreen() {
       const response = await fetch(
         `${BASE_URL}dashboard?user_id=${user?.id}&tenant_id=${domain}&warehouse_id=${warehouse_id}`,
         {
-          method: 'GET',
-        },
+          method: "GET",
+        }
       );
       const result = await response.json();
       if (result && response.status === 200) {
-        if (result.status === 'success') {
+        if (result.status === "success") {
           setDashboardData(result.data);
-          await AsyncStorage.setItem('getDashboard', JSON.stringify(result));
+          await AsyncStorage.setItem("getDashboard", JSON.stringify(result));
         }
       }
     } catch (error) {
@@ -97,31 +90,6 @@ export default function HomeScreen() {
     } finally {
       visualFeedback.hideLoadingBackdrop();
     }
-  };
-  const itemRenderer = (item: { id: number; name: string; value: number }) => {
-      const { Icon, name: iconName, color } = ICONS[item.id] || {};
-
-    if (!Icon) return null; // In case the item.id is not 1-4
-
-    return (
-      <View style={styles.box}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            padding: "10%",
-            gap: 8,
-          }}
-        >
-          <Icon name={iconName} size={24} color={color} />
-
-          <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
-            <Text style={styles.boxTitle}>{item.value}</Text>
-            <Text style={[styles.boxTitle, { color }]}>{item.name}</Text>
-          </View>
-        </View>
-      </View>
-    );
   };
 
   return (
@@ -220,15 +188,104 @@ export default function HomeScreen() {
       <View style={styles.gridContainer}>
         {dashboardData &&
           dashboardData[currency] &&
-          dashboardData[currency][dateIs] &&
-          Object.entries(dashboardData[currency][dateIs] as PeriodMetrics).map(
-            ([key, value], index) => {
-              return itemRenderer({
-                id: index + 1 ,
-                name: key,
-                value: value,
-              });
-            }
+          dashboardData[currency][dateIs] && (
+            <>
+              {/* Revenue Box */}
+              <View style={styles.box}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "10%",
+                    gap: 8,
+                  }}
+                >
+                  <Feather name={"bar-chart"} size={24} color={"purple"} />
+
+                  <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                    <Text style={styles.boxTitle}>
+                      {dashboardData[currency][dateIs].revenue}
+                    </Text>
+                    <Text style={[styles.boxTitle, { color: "purple" }]}>
+                      Revenue
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Profit Box */}
+              <View style={styles.box}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "10%",
+                    gap: 8,
+                  }}
+                >
+                  <AntDesign name="Trophy" size={24} color={"blue"} />
+
+                  <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                    <Text style={styles.boxTitle}>
+                      {dashboardData[currency][dateIs].profit}
+                    </Text>
+                    <Text style={[styles.boxTitle, { color: "blue" }]}>
+                      Profit
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Sale Return Box */}
+              <View style={styles.box}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "10%",
+                    gap: 8,
+                  }}
+                >
+                  <Fontisto
+                    name="arrow-return-left"
+                    size={24}
+                    color={"orange"}
+                  />
+
+                  <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                    <Text style={styles.boxTitle}>
+                      {dashboardData[currency][dateIs].sale}
+                    </Text>
+                    <Text style={[styles.boxTitle, { color: "orange" }]}>
+                      Sale {"\n"}Return
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Purchase Return Box */}
+              <View style={styles.box}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "10%",
+                    gap: 8,
+                  }}
+                >
+                  <Entypo name="loop" size={24} color={"darkgreen"} />
+
+                  <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                    <Text style={styles.boxTitle}>
+                      {dashboardData[currency][dateIs].purchase}
+                    </Text>
+                    <Text style={[styles.boxTitle, { color: "darkgreen" }]}>
+                      Purchase Return
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </>
           )}
       </View>
     </View>

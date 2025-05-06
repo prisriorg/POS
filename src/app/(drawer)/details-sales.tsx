@@ -1,7 +1,7 @@
 import { Colors } from "@/src/constants/Colors";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppSelector } from "@/src/store/reduxHook";
-import { BASE_URL } from "@/src/utils/config";
+import { BASE_URL, IMAGE_BASE_URL } from "@/src/utils/config";
 import {
   paymentStatus,
   paymentStatusSales,
@@ -82,40 +82,29 @@ const DetailsSales = () => {
   const getDetails = async (id: string) => {
     try {
       visualFeedback.showLoadingBackdrop();
-      return setSale(sales.find((im) => im.id === Number(id)) || sales[0]);
-      console.log(
-        "Response:",
+      // return setSale(sales.find((im) => im.id === Number(id)) || sales[0]);
+      await fetch(
         `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`
-      ); // Log the response object
-
-      const response = await fetch(
-        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      console.log(
-        "Response:",
-        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`
-      ); // Log the response object
-      console.log("Purchase details:", data);
-      if (response.status === 200) {
-        // Handle success
-        console.log("Purchase details:", data);
-        setCurrency(
-          currencies.find(
-            (daa) => daa.exchange_rate === data?.purchase?.exchange_rate
-          )?.code || "USD"
-        );
-        setPurData(data);
-      } else {
-        // Handle error
-        console.error("Error fetching purchase details:", data.message);
-      }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Product data:", data.sale);
+          if (data?.sale) {
+            setSale(data.sale);
+            setPurData(data.product_sale_data);
+          } else {
+            console.log("No payments found for this product.");
+          }
+          // Handle the fetched product data
+          // setProduct(data.product);
+          // console.log("Product data:", data.product);
+          // setGetVariants(data.lims_product_variant_data);
+          visualFeedback.hideLoadingBackdrop();
+        })
+        .catch((error) => {
+          console.error("Error fetching product:", error);
+          visualFeedback.hideLoadingBackdrop();
+        });
     } catch (error) {
       console.error("Error fetching purchase details:", error);
     } finally {
@@ -194,54 +183,54 @@ const DetailsSales = () => {
         <Divider />
         <Spacer15 />
 
-        {/* {sale?.product_purchase_data?.map((data) => {
-                  return (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        width: "100%",
-                        borderBottomWidth: 1,
-                        borderBottomColor: Colors.colors.border,
-                        paddingBottom: 5,
-                      }}
-                    >
-                      <Image
-                        source={{
-                          uri: `${IMAGE_BASE_URL}${
-                            products[data?.product_id]?.image
-                          }`,
-                        }}
-                        style={{
-                          width: 70,
-                          height: 70,
-                        }}
-                        contentFit="cover"
-                      />
-                      <View
-                        style={{
-                          flex: 1,
-                          width: "100%",
-                          justifyContent: "center",
-                          paddingLeft: 10,
-                        }}
-                      >
-                        <Text>{products[data?.product_id]?.name}</Text>
-                        <Spacer10 />
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Text>
-                            {products[data?.product_id]?.actual_price} {currency}
-                          </Text>
-                          <Text>Qty: {data?.qty} </Text>
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })} */}
+        {purData?.map((data) => {
+
+          const product = products[data?.product_id];
+          return (
+            <View
+              style={{
+                flexDirection: "row",
+                width: "100%",
+                borderBottomWidth: 1,
+                borderBottomColor: Colors.colors.border,
+                paddingBottom: 5,
+              }}
+            >
+              <Image
+                source={{
+                  uri: `${IMAGE_BASE_URL}${products[data?.product_id]?.image}`,
+                }}
+                style={{
+                  width: 70,
+                  height: 70,
+                }}
+                contentFit="cover"
+              />
+              <View
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  justifyContent: "center",
+                  paddingLeft: 10,
+                }}
+              >
+                <Text>{products[data?.product_id]?.name}</Text>
+                <Spacer10 />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text>
+                    {products[data?.product_id]?.actual_price} {currency}
+                  </Text>
+                  <Text>Qty: {data?.qty} </Text>
+                </View>
+              </View>
+            </View>
+          );
+        })}
 
         <View style={styles.summarySection}>
           <View
@@ -260,9 +249,7 @@ const DetailsSales = () => {
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
             <Text style={styles.summaryLabel}>Sale Status</Text>
-            <Text style={styles.summaryValueV}>
-              {salesStatus.find((im) => sale.sale_status === im.id)?.label}
-            </Text>
+            <Text style={styles.summaryValueV}>{sale.sale_status}</Text>
           </View>
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
@@ -274,12 +261,7 @@ const DetailsSales = () => {
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
             <Text style={styles.summaryLabel}>Payment Status</Text>
-            <Text style={styles.summaryValueV}>
-              {
-                paymentStatusSales.find((im) => sale.payment_status === im.id)
-                  ?.label
-              }
-            </Text>
+            <Text style={styles.summaryValueV}>{sale.payment_status}</Text>
           </View>
         </View>
         <Spacer15 />
@@ -302,7 +284,8 @@ const DetailsSales = () => {
         <Pressable
           onPress={() => {
             router.push(`/(drawer)/return-sales?id=${sale.id}`);
-          }}>
+          }}
+        >
           <View style={[styles.button, styles.secondaryButton]}>
             <Text style={styles.buttonText}>Refund/Cancel</Text>
           </View>

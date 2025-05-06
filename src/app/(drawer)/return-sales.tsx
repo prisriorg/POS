@@ -99,6 +99,11 @@ const ReturnSales = () => {
         //   )?.code || "USD"
         // );
         setReturnData(data);
+        setFormData({
+          ...formData,
+          sale_id: data?.sale?.id,
+          return_note: data?.sale?.sale_note,
+        });
       } else {
         // Handle error
         console.error("Error fetching purchase details:", data.message);
@@ -262,8 +267,7 @@ const ReturnSales = () => {
             Return Note
           </Text>
           <TextInput
-            editable={false}
-            value={returnData?.sale?.sale_note}
+            value={formData.return_note}
             multiline
             numberOfLines={4}
             onChangeText={(text) => {

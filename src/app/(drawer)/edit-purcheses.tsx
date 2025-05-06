@@ -5,14 +5,26 @@ import {
   TextInput,
   View,
   ScrollView,
+  Modal,
+  Dimensions,
+  FlatList,
 } from "react-native";
-import React, { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect } from "react";
+import {
+  AntDesign,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
-import { Button, Divider } from "react-native-paper";
-import { BASE_URL } from "@/src/utils/config";
+import { Button, Divider, Searchbar } from "react-native-paper";
+import { BASE_URL, IMAGE_BASE_URL } from "@/src/utils/config";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
 import { Dropdown } from "react-native-element-dropdown";
@@ -22,37 +34,131 @@ import {
   purchaseStatus,
   suppliers,
 } from "@/src/utils/GetData";
+
+import { Image } from "expo-image";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 
 const EditPurcheses = () => {
   const router = useRouter();
   const [date, setDate] = React.useState(new Date());
-  const [formData, setFormData] = React.useState({
-    warehouse_id: 1,
-    expense_category_id: 1,
-    supplier_id: 1,
-    purchase_status: 1,
-    full_name: "",
-    curency_id: 1,
-    exchange_rate: "1",
-    amount: "1",
-    discount: "0",
-    shipping_cost: "0",
-    note: "",
-    product: [],
-    date: new Date().toISOString().split("T")[0], // Default date
-    time: `${new Date().getHours()}:${new Date().getMinutes()}`, // Default time
-  });
-
-  const prm = useLocalSearchParams();
-
-  const [products, useProducts] = useState([]);
-
+  const [show, setShow] = React.useState(false);
+  const [showProducts, setShowProducts] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState(0);
   const visualFeedback = useVisualFeedback();
   const { user, domain } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-  const { warehouses, currencies } = useAppSelector((state) => state.home);
+  const { warehouses, currencies, products } = useAppSelector(
+    (state) => state.home
+  );
+
+  const prms = useLocalSearchParams();
+  const [purData, setPurData] = React.useState<any>(null);
+  const [currency, setCurrency] = React.useState<string>("USD");
+
+  const getDetails = async (id: string) => {
+    try {
+      visualFeedback.showLoadingBackdrop();
+
+      const response = await fetch(
+        `${BASE_URL}purchase/${id}?user_id=${user?.id}&tenant_id=${domain}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (response.status === 200) {
+        // Handle success
+        console.log("Purchase details:", data);
+        setCurrency(
+          currencies.find(
+            (daa) => daa.exchange_rate === data?.purchase?.exchange_rate
+          )?.code || "USD"
+        );
+        setPurData(data);
+      } else {
+        // Handle error
+        console.error("Error fetching purchase details:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching purchase details:", error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
+
+  // Use useFocusEffect to run getDetails every time the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (prms.id) {
+        getDetails(prms.id as string);
+      }
+
+      // Optional cleanup function
+      return () => {
+        // Any cleanup code here
+      };
+    }, [prms.id, user?.id, domain])
+  );
+
+  const [formData, setFormData] = React.useState({
+    created_at: new Date().toISOString().split("T")[0],
+    warehouse_id: "1",
+    supplier_id: "1",
+    status: "1",
+    currency_id: "1",
+    exchange_rate: "1",
+    product_code_name: null,
+    qty: ["4"],
+    recieved: ["4"],
+    batch_no: [null],
+    expired_date: [null],
+    // product_code: [" kg/-62502311 "],
+    product_id: ["2"],
+    purchase_unit: ["piece"],
+    net_unit_cost: ["0.43"],
+    discount: ["0.00"],
+    tax_rate: ["15.00"],
+    tax: ["0.26"],
+    subtotal: ["2.00"],
+    imei_number: [null],
+    total_qty: "4",
+    total_discount: "0.00",
+    total_tax: "0.26",
+    total_cost: "2.00",
+    item: "1",
+    order_tax: "0.00",
+    grand_total: "2.00",
+    paid_amount: "0.00",
+    payment_status: "1",
+    order_tax_rate: "0",
+    order_discount: "1",
+    shipping_cost: "1",
+    note: "test",
+  });
+  const [searchText, setSearchText] = React.useState("");
+
+  const [allProduct, setAllProduct] = React.useState(products);
+
+  const [dataProducts, setProducts] = React.useState<
+    {
+      id: number;
+      name: string;
+      price: string;
+      quantity: string;
+      discount: string;
+      code: string;
+      tax_amount: string;
+      tax_rate: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    setAllProduct(products);
+  }, [products]);
 
   // Handle date change
   const onDateChange = (event: any, selectedDate: any) => {
@@ -60,22 +166,7 @@ const EditPurcheses = () => {
       setDate(selectedDate);
       setFormData((prevState) => ({
         ...prevState,
-        date: selectedDate.toISOString().split("T")[0],
-      }));
-    }
-  };
-
-  // Handle time change
-  const onTimeChange = (event: any, selectedTime: any) => {
-    if (selectedTime) {
-      const hours = selectedTime.getHours();
-      const minutes = selectedTime.getMinutes();
-      const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes
-        .toString()
-        .padStart(2, "0")}`;
-      setFormData((prevState) => ({
-        ...prevState,
-        time: formattedTime,
+        created_at: selectedDate.toISOString().split("T")[0],
       }));
     }
   };
@@ -90,21 +181,178 @@ const EditPurcheses = () => {
     });
   };
 
-  // Show time picker
-  const showTimepicker = () => {
-    DateTimePickerAndroid.open({
-      value: date,
-      onChange: onTimeChange,
-      mode: "time",
-      is24Hour: true,
-    });
+  // product item renderer
+  const renderProductItem = ({ item }: any) => {
+    return (
+      <Pressable
+        onPress={() => {
+          setShowProducts(false);
+          const existingProduct = dataProducts.find(
+            (product) => product.id === item.id
+          );
+
+          if (existingProduct) {
+            setProducts((prevProducts) =>
+              prevProducts.map((product) =>
+                product.id === item.id
+                  ? {
+                      ...product,
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      discount: item.discount,
+                      code: item.code,
+                      tax_amount: item.tax_amount,
+                      tax_rate: item.tax_percentage,
+                      quantity: (Number(product.quantity) + 1).toString(),
+                    }
+                  : product
+              )
+            );
+          } else {
+            setProducts((prevProducts) => [
+              ...prevProducts,
+              {
+                id: item.id,
+                name: item.name,
+                quantity: "1",
+                discount: "0.0",
+                price: item.price,
+                code: item.code,
+                tax_amount: item.tax_amount,
+                tax_rate: item.tax_percentage,
+              },
+            ]);
+          }
+
+          console.log(products[0]);
+        }}
+        style={{
+          padding: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: "#ccc",
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            width: "100%",
+            paddingBottom: 5,
+          }}
+        >
+          <Image
+            source={{
+              uri: `${IMAGE_BASE_URL}${item?.image}`,
+            }}
+            style={{
+              width: 50,
+              height: 50,
+            }}
+            contentFit="cover"
+          />
+          <View
+            style={{
+              flex: 1,
+              width: "100%",
+              justifyContent: "center",
+              paddingLeft: 15,
+            }}
+          >
+            <Text
+              style={{
+                color: Colors.colors.text,
+                // fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              Product:{" "}
+              <Text
+                style={{
+                  fontWeight: "400",
+                }}
+              >
+                {item?.name}
+              </Text>
+            </Text>
+            <Spacer10 />
+            <Text
+              style={{
+                color: Colors.colors.text,
+                // fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              Code/ SKU:{" "}
+              <Text
+                style={{
+                  fontWeight: "400",
+                }}
+              >
+                {item?.code}
+              </Text>
+            </Text>
+
+            <Spacer10 />
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <MaterialCommunityIcons
+              name="greater-than"
+              size={24}
+              color="#ccc"
+            />
+          </View>
+        </View>
+      </Pressable>
+    );
   };
 
   const formSubmit = async () => {
     try {
       visualFeedback.showLoadingBackdrop();
 
-      const apiUrl = `${BASE_URL}purchase/update/${prm?.id}?user_id=${user.id}&tenant_id=${domain}`;
+      console.log(
+        "Form Data",
+        JSON.stringify({
+          ...formData,
+
+          product_code_name: dataProducts.map((item) => item.name),
+          qty: dataProducts.map((item) => item.quantity),
+          product_id: dataProducts.map((item) => item.id),
+          net_unit_cost: dataProducts.map((item) => item.price),
+          discount: dataProducts.map((item) => item.discount),
+          subtotal: dataProducts.map(
+            (item) => parseInt(item.price) * parseInt(item.quantity)
+          ),
+          product_code: dataProducts.map((item) => item.code),
+          total_qty: dataProducts.reduce(
+            (acc, item) => acc + parseInt(item.quantity),
+            0
+          ),
+          total_discount: dataProducts.reduce(
+            (acc, item) => acc + parseFloat(item.discount),
+            0
+          ),
+          total_cost: dataProducts.reduce(
+            (acc, item) => acc + parseInt(item.price) * parseInt(item.quantity),
+            0
+          ),
+          grand_total: dataProducts.reduce(
+            (acc, item) =>
+              acc +
+              parseInt(item.price) * parseInt(item.quantity) -
+              parseFloat(item.discount),
+            0
+          ),
+        })
+      );
+
+      const apiUrl = `${BASE_URL}save/purchase?user_id=${user.id}&tenant_id=${domain}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -112,16 +360,55 @@ const EditPurcheses = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(
+          {
+            ...formData,
+
+            ...formData,
+
+            product_code_name: dataProducts.map((item) => item.name),
+            qty: dataProducts.map((item) => item.quantity),
+            product_id: dataProducts.map((item) => item.id),
+            net_unit_cost: dataProducts.map((item) => item.price),
+            discount: dataProducts.map((item) => item.discount),
+            subtotal: dataProducts.map(
+              (item) => parseInt(item.price) * parseInt(item.quantity)
+            ),
+            product_code: dataProducts.map((item) => item.code),
+            total_qty: dataProducts.reduce(
+              (acc, item) => acc + parseInt(item.quantity),
+              0
+            ),
+            total_discount: dataProducts.reduce(
+              (acc, item) => acc + parseFloat(item.discount),
+              0
+            ),
+            total_cost: dataProducts.reduce(
+              (acc, item) =>
+                acc + parseInt(item.price) * parseInt(item.quantity),
+              0
+            ),
+            grand_total: dataProducts.reduce(
+              (acc, item) =>
+                acc +
+                parseInt(item.price) * parseInt(item.quantity) -
+                parseFloat(item.discount),
+              0
+            ),
+          },
+          null,
+          2
+        ),
       });
       const data = await response.json();
       console.log(data);
       if (data.status === "success") {
-        alert("Expense added successfully");
+        alert("Purchese added successfully");
         visualFeedback.hideLoadingBackdrop();
-        router.replace("/(drawer)/expenses");
-      } else if (data.status === "error") {
-        alert(data.message);
+        router.replace("/(drawer)/purchases");
+      }
+      {
+        alert(JSON.stringify(data.error || data.errors));
         visualFeedback.hideLoadingBackdrop();
       }
     } catch (error) {
@@ -148,6 +435,7 @@ const EditPurcheses = () => {
               <Pressable
                 onPress={() => {
                   router.replace("/(drawer)/purchases");
+                  setProducts([]);
                 }}
                 style={{
                   padding: 10,
@@ -180,7 +468,7 @@ const EditPurcheses = () => {
               style={styles.input}
               placeholder="Select date"
               editable={false}
-              value={formData.date}
+              value={formData.created_at}
             />
           </Pressable>
 
@@ -252,17 +540,17 @@ const EditPurcheses = () => {
             style={styles.input}
             placeholder="Purchase status"
             data={purchaseStatus}
-            value={formData.expense_category_id}
+            value={formData.status}
             labelField="label"
             valueField="value"
             onChange={(item) => {
               setFormData((prevState) => {
-                return { ...prevState, expense_category_id: item.value };
+                return { ...prevState, status: item.value };
               });
             }}
           />
 
-          <Text
+          {/* <Text
             style={{
               fontSize: 16,
               marginBottom: 8,
@@ -281,7 +569,7 @@ const EditPurcheses = () => {
               });
             }}
             value={formData.full_name}
-          />
+          /> */}
           <View
             style={{
               flexDirection: "row",
@@ -314,12 +602,12 @@ const EditPurcheses = () => {
                     value: item.id,
                   };
                 })}
-                value={formData.curency_id}
+                value={formData.currency_id}
                 labelField="label"
                 valueField="value"
                 onChange={(item) => {
                   setFormData((prevState) => {
-                    return { ...prevState, curency_id: item.value };
+                    return { ...prevState, currency_id: item.value };
                   });
                 }}
               />
@@ -340,7 +628,7 @@ const EditPurcheses = () => {
                 Exchange Rate
               </Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { textAlign: "right" }]}
                 keyboardType="numeric"
                 onChangeText={(text) => {
                   setFormData((prevState) => {
@@ -355,10 +643,14 @@ const EditPurcheses = () => {
 
           <Button
             mode="outlined"
-            onPress={() => {}}
+            onPress={() => {
+              setShowProducts(true);
+            }}
             style={{
               // backgroundColor: Colors.colors.primary,
               borderColor: Colors.colors.primary,
+              borderWidth: 1,
+              borderRadius: 8,
             }}
             labelStyle={{ color: "white" }}
           >
@@ -380,7 +672,6 @@ const EditPurcheses = () => {
             <View
               style={{
                 flexDirection: "row",
-                backgroundColor: "#ccc",
                 padding: 8,
               }}
             >
@@ -406,32 +697,44 @@ const EditPurcheses = () => {
               </Text>
             </View>
             {/* Example row */}
-            {products.map((ide:any) => (
+
+            {dataProducts.map((item, index) => (
               <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    padding: 8,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ddd",
+                <Pressable
+                  onPress={() => {
+                    setShow(true);
+                    setSelectedProduct(index);
                   }}
                 >
-                  <Text style={{ flex: 1, textAlign: "left" }}>
-                    {ide.name}
-                  </Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ textAlign: "right" }}>$100.00</Text>
-                    <Text
-                      style={{
-                        textAlign: "right",
-                        color: Colors.colors.border,
-                      }}
-                    >
-                      34567
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      padding: 8,
+                      borderTopWidth: 1,
+                      borderTopColor: "#ccc",
+                    }}
+                  >
+                    <Text style={{ flex: 1, textAlign: "left" }}>
+                      {item?.name}
                     </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ textAlign: "right" }}>
+                        {(Number(item?.price) * Number(item?.quantity)).toFixed(
+                          2
+                        )}
+                      </Text>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: Colors.colors.border,
+                        }}
+                      >
+                        {item?.quantity} x {Number(item?.price).toFixed(2)}
+                      </Text>
+                    </View>
                   </View>
-                </View>
+                </Pressable>
                 <Divider />
               </>
             ))}
@@ -460,7 +763,7 @@ const EditPurcheses = () => {
                 textAlign: "right",
               }}
             >
-              {products.length}
+              {dataProducts.length}
             </Text>
           </View>
 
@@ -549,7 +852,15 @@ const EditPurcheses = () => {
             }}
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Subtotal</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$100.00</Text>
+            <Text style={{ flex: 1, textAlign: "right" }}>
+              {dataProducts
+                .reduce(
+                  (acc, item) =>
+                    acc + Number(item.price) * Number(item.quantity),
+                  0
+                )
+                .toFixed(2)}
+            </Text>
           </View>
           <View
             style={{
@@ -559,7 +870,11 @@ const EditPurcheses = () => {
             }}
           >
             <Text style={{ flex: 1, textAlign: "left" }}>Discount</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$10.00</Text>
+            <Text style={{ flex: 1, textAlign: "right" }}>
+              {dataProducts
+                .reduce((acc, item) => acc + Number(item.discount), 0)
+                .toFixed(2)}
+            </Text>
           </View>
           <Spacer10 />
           <Divider />
@@ -590,22 +905,16 @@ const EditPurcheses = () => {
                 fontWeight: "bold",
               }}
             >
-              $10.00
+              {dataProducts
+                .reduce(
+                  (acc, item) =>
+                    acc + Number(item.price) * Number(item.quantity),
+                  0
+                )
+                .toFixed(2)}
             </Text>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingBottom: 8,
-              paddingTop: 4,
-            }}
-          >
-            <Text style={{ flex: 1, textAlign: "left" }}>Change</Text>
-            <Text style={{ flex: 1, textAlign: "right" }}>$10.00</Text>
-          </View>
 
-          <Spacer20 />
           <Spacer20 />
           <Button
             mode="contained"
@@ -622,13 +931,266 @@ const EditPurcheses = () => {
                 fontSize: 16,
               }}
             >
-              Add Purchese
+              Save Purchese
             </Text>
           </Button>
         </View>
 
         <Spacer20 />
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={show}
+        onRequestClose={() => {
+          setShow(false);
+        }}
+      >
+        <ScrollView>
+          <View
+            style={{
+              flex: 1,
+              // justifyContent: "center",
+              paddingVertical: Dimensions.get("window").height / 10,
+              width: "100%",
+              height: Dimensions.get("window").height,
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            }}
+          >
+            <View
+              style={{
+                width: "95%",
+                backgroundColor: "white",
+
+                borderRadius: 10,
+                padding: 15,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingBottom: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    flex: 1,
+                    color: Colors.colors.text,
+                  }}
+                >
+                  Product Information
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    setShow(false);
+                  }}
+                >
+                  <AntDesign name="close" size={20} color="black" />
+                </Pressable>
+              </View>
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  marginTop: 16,
+                  color: Colors.colors.text,
+                }}
+              >
+                Product Name:
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter product name"
+                onChangeText={(text) => {
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, name: text }
+                        : product
+                    )
+                  );
+                }}
+                value={dataProducts[selectedProduct]?.name}
+              />
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  marginTop: 16,
+                  color: Colors.colors.text,
+                }}
+              >
+                Product Price:
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="0"
+                onChangeText={(text) => {
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, price: text }
+                        : product
+                    )
+                  );
+                }}
+                value={dataProducts[selectedProduct]?.price}
+              />
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  marginTop: 16,
+                  color: Colors.colors.text,
+                }}
+              >
+                Product Quantity:
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="1"
+                onChangeText={(text) => {
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, quantity: text }
+                        : product
+                    )
+                  );
+                }}
+                value={dataProducts[selectedProduct]?.quantity}
+              />
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  marginTop: 16,
+                  color: Colors.colors.text,
+                }}
+              >
+                Discount
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="0.0"
+                onChangeText={(text) => {
+                  setProducts((prevProducts) =>
+                    prevProducts.map((product, index) =>
+                      index === selectedProduct
+                        ? { ...product, discount: text }
+                        : product
+                    )
+                  );
+                }}
+                value={dataProducts[selectedProduct]?.discount}
+              />
+              <Spacer20 />
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setShow(false);
+                }}
+                style={{
+                  backgroundColor: Colors.colors.primary,
+                  alignContent: "center",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+                labelStyle={{ color: "white", fontWeight: "bold" }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                  }}
+                >
+                  Save
+                </Text>
+              </Button>
+            </View>
+          </View>
+        </ScrollView>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showProducts}
+        onRequestClose={() => setShowProducts(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={styles.dismissArea}
+            onPress={() => setShowProducts(false)}
+          />
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Product</Text>
+              <Pressable onPress={() => setShowProducts(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </Pressable>
+            </View>
+
+            <Searchbar
+              style={[
+                styles.searchInput,
+                {
+                  borderRadius: 8,
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#Cecece",
+                },
+              ]}
+              placeholder="Search by product name or code"
+              placeholderTextColor="#000"
+              selectionColor="lightgrey"
+              onChangeText={(text) => {
+                setSearchText(text);
+                setAllProduct(
+                  products.filter(
+                    (item: any) =>
+                      item.name.toLowerCase().includes(text.toLowerCase()) ||
+                      item.code.includes(text)
+                  )
+                );
+                // setHSCodes(
+                //   hscodes.filter(
+                //     (item: any) =>
+                //       item.description
+                //         .toLowerCase()
+                //         .includes(text.toLowerCase()) ||
+                //       item.hs_code.includes(text)
+                //   )
+                // );
+              }}
+              value={searchText}
+            />
+
+            {allProduct.length > 0 ? (
+              <FlatList
+                data={allProduct}
+                renderItem={renderProductItem}
+                keyExtractor={(item) => item.id}
+              />
+            ) : (
+              <View style={styles.noResults}>
+                <Text style={styles.noResultsText}>No product found</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -643,5 +1205,49 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     paddingHorizontal: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: "80%", // Takes up to 80% of screen height
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: 18,
+    textAlign: "center",
+    fontWeight: "bold",
+    color: Colors.colors.text,
+  },
+  dismissArea: {
+    flex: 1,
+  },
+  searchInput: {
+    marginBottom: 10,
+  },
+  noResults: {
+    padding: 20,
+    alignItems: "center",
+  },
+  noResultsText: {
+    color: "#888",
+    fontSize: 16,
   },
 });

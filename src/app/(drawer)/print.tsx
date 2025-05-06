@@ -4,19 +4,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/src/constants/Colors";
 import { Stack, useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
-import BluetoothPrinter, {
-  type iDevice,
-} from "@linvix-sistemas/react-native-bluetooth-printer";
+// import BluetoothPrinter, {
+//   type iDevice,
+// } from "@linvix-sistemas/react-native-bluetooth-printer";
 // import SunmiPrinter, { AlignValue } from "@heasy/react-native-sunmi-printer";
 
-import {
-  Printer,
-  Style,
-  Align,
-  Model,
-  InMemory,
-  Cut,
-} from "@linvix-sistemas/react-native-escpos-buffer";
+// import {
+//   Printer,
+//   Style,
+//   Align,
+//   Model,
+//   InMemory,
+//   Cut,
+// } from "@linvix-sistemas/react-native-escpos-buffer";
 import { setCart } from "@/src/store/reducers/homeReducer";
 import LCPrinter from "@/src/utils/LCPrinter";
 import { Spacer20 } from "@/src/utils/Spacing";
@@ -109,83 +109,83 @@ const PrintPage = () => {
     return bytes;
   };
 
-  useEffect(() => {
-    const foundListener = BluetoothPrinter.onDeviceFound((device: iDevice) => {
-      console.log(device);
-      setDevices((old) => {
-        if (!old.some((d) => d.address === device.address)) {
-          old.push(device);
-        }
+  // useEffect(() => {
+  //   const foundListener = BluetoothPrinter.onDeviceFound((device: iDevice) => {
+  //     console.log(device);
+  //     setDevices((old) => {
+  //       if (!old.some((d) => d.address === device.address)) {
+  //         old.push(device);
+  //       }
 
-        return [...old];
-      });
-    });
+  //       return [...old];
+  //     });
+  //   });
 
-    // Listen for already paired devices
-    const pairedListener = BluetoothPrinter.onDeviceAlreadyPaired(
-      (devices: iDevice[]) => {
-        (devices ?? []).map((device) => {
-          setDevices((old) => {
-            if (!old.some((d) => d.address === device.address)) {
-              old.push(device);
-            }
+  //   // Listen for already paired devices
+  //   const pairedListener = BluetoothPrinter.onDeviceAlreadyPaired(
+  //     (devices: iDevice[]) => {
+  //       (devices ?? []).map((device) => {
+  //         setDevices((old) => {
+  //           if (!old.some((d) => d.address === device.address)) {
+  //             old.push(device);
+  //           }
 
-            return [...old];
-          });
-        });
-      }
-    );
+  //           return [...old];
+  //         });
+  //       });
+  //     }
+  //   );
 
-    const ontts = BluetoothPrinter.onScanDone((data) => {
-      console.log("Dtaa", data);
-    });
+  //   const ontts = BluetoothPrinter.onScanDone((data) => {
+  //     console.log("Dtaa", data);
+  //   });
 
-    return () => {
-      foundListener?.remove();
-      pairedListener?.remove();
-      ontts?.remove();
-    };
-  }, []);
+  //   return () => {
+  //     foundListener?.remove();
+  //     pairedListener?.remove();
+  //     ontts?.remove();
+  //   };
+  // }, []);
 
-  const goScanDevices = async () => {
-    try {
-      setDevices([]);
-      setIsLoading(true);
+  // const goScanDevices = async () => {
+  //   try {
+  //     setDevices([]);
+  //     setIsLoading(true);
 
-      const devices = await BluetoothPrinter.scanDevices();
-      console.log(devices);
-      setIsLoading(false);
-    } catch (error: Error | any) {
-      console.log("Scan: ", error);
-      setIsLoading(false);
-      // Alert.alert("Scan ", error.message);
-    }
-  };
+  //     const devices = await BluetoothPrinter.scanDevices();
+  //     console.log(devices);
+  //     setIsLoading(false);
+  //   } catch (error: Error | any) {
+  //     console.log("Scan: ", error);
+  //     setIsLoading(false);
+  //     // Alert.alert("Scan ", error.message);
+  //   }
+  // };
 
-  const goEnableBluetooth = async () => {
-    try {
-      await BluetoothPrinter.requestPermission();
-      await BluetoothPrinter.enableBluetooth();
-      if (await BluetoothPrinter.isBluetoothEnabled()) {
-        setIsBluetoothEnabled(true);
-        await goScanDevices();
-      }
-    } catch (error: Error | any) {
-      Alert.alert(error.message);
-    }
-  };
+  // const goEnableBluetooth = async () => {
+  //   try {
+  //     await BluetoothPrinter.requestPermission();
+  //     await BluetoothPrinter.enableBluetooth();
+  //     if (await BluetoothPrinter.isBluetoothEnabled()) {
+  //       setIsBluetoothEnabled(true);
+  //       await goScanDevices();
+  //     }
+  //   } catch (error: Error | any) {
+  //     Alert.alert(error.message);
+  //   }
+  // };
 
-  const goConnect = async (device: iDevice) => {
-    try {
-      const connect = await BluetoothPrinter.connect(device.address);
-      console.log(connect);
-      setShowDevices(false);
-      printWithBluetoothPrinter(connect);
-    } catch (error: Error | any) {
-      console.log("" + error);
-      // Alert.alert(error.message);
-    }
-  };
+  // const goConnect = async (device: iDevice) => {
+  //   try {
+  //     const connect = await BluetoothPrinter.connect(device.address);
+  //     console.log(connect);
+  //     setShowDevices(false);
+  //     printWithBluetoothPrinter(connect);
+  //   } catch (error: Error | any) {
+  //     console.log("" + error);
+  //     // Alert.alert(error.message);
+  //   }
+  // };
 
   // const printWithSunmiPrinter = async () => {
   //   try {

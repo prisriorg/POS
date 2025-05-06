@@ -109,7 +109,7 @@ const AddProduct = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       // base64: true,
-      aspect: [4, 3],
+      // aspect: [4, 3],
       quality: 1,
     });
 
@@ -272,9 +272,16 @@ const AddProduct = () => {
           ],
           { cancelable: false }
         );
+      } else {
+        visualFeedback.hideLoadingBackdrop();
+        Alert.alert("Error", JSON.stringify(result.error), [{ text: "OK" }], {
+          cancelable: false,
+        });
       }
     } catch (error) {
       console.log("Error: ", error);
+      visualFeedback.hideLoadingBackdrop();
+    } finally {
       visualFeedback.hideLoadingBackdrop();
     }
   };
@@ -330,32 +337,37 @@ const AddProduct = () => {
                 onPress={() => {
                   router.replace("/(drawer)/products-inventory");
                   setFormData({
-                    promotional: false,
+                    name: "",
                     type: "",
-                    productName: "",
-                    productCode: "",
-                    hsCode: "",
-                    barcodeSymbology: "",
-                    brand: "",
-                    category: "",
-                    unit: "",
-                    saleUnit: "",
-                    purchaseUnit: "",
-                    buyingPrice: "",
-                    sellingPrice: "",
-                    wholesalePrice: "",
-                    dailySaleObjective: "",
-                    lowStockAlert: "",
-                    tax: "",
-                    taxMethod: "inclusive",
-                    isActive: false,
-                    description: "",
+                    code: "",
+                    barcode_symbology: "",
+                    brand_id: "",
+                    category_id: "",
+                    hs_code: "",
                     image: null,
-                    IMEI: false,
-                    productVariants: false,
-                    promotionalPrice: false,
-                    differentWarehouses: false,
-                    expirationDate: false,
+                    unit_id: "",
+                    sale_unit_id: "",
+                    purchase_unit_id: "",
+                    cost: "0",
+                    price: "0",
+                    wholesale_price: "0",
+                    tax_id: "",
+                    tax_method: "1",
+                    qty: 0,
+                    alert_quantity: "0",
+                    daily_sale_objective: "0",
+                    is_initial_stock: false,
+                    featured: false,
+                    is_embeded: false,
+                    product_details: "",
+                    is_variant: false,
+                    is_diffPrice: false,
+                    is_batch: false,
+                    is_imei: false,
+                    promotion: false,
+                    promotion_price: "0",
+                    starting_date: "2025-05-01",
+                    last_date: "2025-05-31",
                   });
                 }}
                 style={{
@@ -468,24 +480,41 @@ const AddProduct = () => {
           <Spacer20 />
 
           {/* HS Code */}
-          <Text style={styles.label}>
-            HS Code <Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Or Select HS Code"
-            value={selectedHSCode.hs_code}
-            editable={false}
-            pointerEvents="none"
-            selectionColor="lightgrey"
-          />
+
           <Button
-            mode="contained"
+            mode="outlined"
             style={styles.actionButton}
             onPress={() => setShowHSCodes(true)}
           >
-            <Text style={styles.buttonText}>Select HS Code</Text>
+            <Text
+              style={{
+                color: Colors.colors.primary,
+                fontSize: 16,
+              }}
+            >
+              Select HS Code
+            </Text>
           </Button>
+          <Text
+            style={{
+              fontSize: 16,
+              color: Colors.colors.text,
+              marginBottom: 10,
+              marginTop: 10,
+              fontWeight: "bold",
+            }}
+          >
+            Code:{" "}
+            <Text
+              style={{
+                fontSize: 16,
+                color: Colors.colors.text,
+                fontWeight: "400",
+              }}
+            >
+              {formData.hs_code ? formData.hs_code : "No HS Code selected"}
+            </Text>
+          </Text>
           <Spacer10 />
 
           {/* Barcode Symbology */}
@@ -558,7 +587,9 @@ const AddProduct = () => {
           />
           <Spacer20 />
 
-          <Text style={styles.label}>Sale Unit</Text>
+          <Text style={styles.label}>
+            Sale Unit <Text style={styles.required}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={[{ id: 1, label: "piece", value: 1 }]}
@@ -571,7 +602,9 @@ const AddProduct = () => {
           />
           <Spacer20 />
 
-          <Text style={styles.label}>Purchase Unit</Text>
+          <Text style={styles.label}>
+            Purchase Unit <Text style={styles.required}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={[{ id: 1, label: "piece", value: 1 }]}
@@ -1045,7 +1078,10 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: 10,
-    backgroundColor: Colors.colors.primary,
+    color: Colors.colors.primary,
+    borderColor: Colors.colors.primary,
+    borderWidth: 1,
+
     borderRadius: 8,
   },
   submitButton: {
@@ -1054,7 +1090,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: "white",
+    color: Colors.colors.card,
     fontSize: 16,
   },
   checkboxContainer: {

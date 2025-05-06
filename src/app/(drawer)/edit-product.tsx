@@ -144,7 +144,15 @@ const EditProduct = () => {
               parseInt(data.product.is_initial_stock) === 1 ? true : false,
             featured: parseInt(data.product.featured) === 1 ? true : false,
             is_embeded: parseInt(data.product.is_embeded) === 1 ? true : false,
-            product_details: data.product.description,
+            product_details: data.product.product_details,
+            is_variant: parseInt(data.product.is_variant) === 1 ? true : false,
+            promotion: parseInt(data.product.promotion) === 1 ? true : false,
+            promotion_price: data.product.promotion_price?.toString(),
+            starting_date: data.product.starting_date,
+            last_date: data.product.last_date,
+            is_diffPrice:
+              parseInt(data.product.is_diffPrice) === 1 ? true : false,
+            is_batch: parseInt(data.product.is_batch) === 1 ? true : false,
           }));
 
           setImage({
@@ -178,7 +186,7 @@ const EditProduct = () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      // allowsEditing: true,
+      allowsEditing: true,
       // base64: true,
       // aspect: [4, 3],
       quality: 1,
@@ -241,9 +249,9 @@ const EditProduct = () => {
 
       if (formData.promotion) {
         formDataObj.append("promotion", "1");
-        formDataObj.append("promotion_price", formData.promotion_price);
-        formDataObj.append("starting_date", formData.starting_date);
-        formDataObj.append("last_date", formData.last_date);
+        formDataObj.append("promotion_price", formData?.promotion_price || "0");
+        formDataObj.append("starting_date", formData?.starting_date || "");
+        formDataObj.append("last_date", formData?.last_date || "");
       }
 
       formDataObj.append("product_details", formData.product_details);
@@ -315,14 +323,14 @@ const EditProduct = () => {
                   unit_id: "",
                   sale_unit_id: "",
                   purchase_unit_id: "",
-                  cost: "0",
-                  price: "0",
-                  wholesale_price: "0",
+                  cost: "",
+                  price: "",
+                  wholesale_price: "",
                   tax_id: "",
                   tax_method: "1",
                   qty: 0,
-                  alert_quantity: "0",
-                  daily_sale_objective: "0",
+                  alert_quantity: "",
+                  daily_sale_objective: "",
                   is_initial_stock: false,
                   featured: false,
                   is_embeded: false,
@@ -332,9 +340,9 @@ const EditProduct = () => {
                   is_batch: false,
                   is_imei: false,
                   promotion: false,
-                  promotion_price: "0",
-                  starting_date: "2025-05-01",
-                  last_date: "2025-05-31",
+                  promotion_price: "",
+                  starting_date: "",
+                  last_date: "",
                 });
                 setImage(null);
                 router.replace("/(drawer)/products-inventory");
@@ -387,7 +395,7 @@ const EditProduct = () => {
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
         options={{
-          title: "Add Product",
+          title: "Edit Product",
           headerTitleAlign: "center",
           headerStyle: {
             backgroundColor: "#fff",
@@ -514,23 +522,40 @@ const EditProduct = () => {
           <Spacer20 />
 
           {/* HS Code */}
-          <Text style={styles.label}>
-            HS Code <Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Or Select HS Code"
-            value={formData.hs_code}
-            editable={false}
-            selectionColor="lightgrey"
-          />
           <Button
-            mode="contained"
+            mode="outlined"
             style={styles.actionButton}
             onPress={() => setShowHSCodes(true)}
           >
-            <Text style={styles.buttonText}>Select HS Code</Text>
+            <Text
+              style={{
+                color: Colors.colors.primary,
+                fontSize: 16,
+              }}
+            >
+              Select HS Code
+            </Text>
           </Button>
+          <Text
+            style={{
+              fontSize: 16,
+              color: Colors.colors.text,
+              marginBottom: 10,
+              marginTop: 10,
+              fontWeight: "bold",
+            }}
+          >
+            Code:{" "}
+            <Text
+              style={{
+                fontSize: 16,
+                color: Colors.colors.text,
+                fontWeight: "400",
+              }}
+            >
+              {formData.hs_code ? formData.hs_code : "No HS Code selected"}
+            </Text>
+          </Text>
           <Spacer10 />
 
           {/* Barcode Symbology */}
@@ -603,7 +628,9 @@ const EditProduct = () => {
           />
           <Spacer20 />
 
-          <Text style={styles.label}>Sale Unit</Text>
+          <Text style={styles.label}>
+            Sale Unit <Text style={styles.required}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={[{ id: 1, label: "piece", value: 1 }]}
@@ -616,7 +643,9 @@ const EditProduct = () => {
           />
           <Spacer20 />
 
-          <Text style={styles.label}>Purchase Unit</Text>
+          <Text style={styles.label}>
+            Purchase Unit <Text style={styles.required}>*</Text>
+          </Text>
           <Dropdown
             style={styles.input}
             data={[{ id: 1, label: "piece", value: 1 }]}
@@ -920,6 +949,7 @@ const EditProduct = () => {
                 keyboardType="numeric"
                 onChangeText={(text) => updateFormData("promotion_price", text)}
                 selectionColor="lightgrey"
+                value={formData.promotion_price}
               />
               <Spacer20 />
 
@@ -929,15 +959,17 @@ const EditProduct = () => {
                 placeholder="16-04-2025"
                 onChangeText={(text) => updateFormData("starting_date", text)}
                 selectionColor="lightgrey"
+                value={formData.starting_date}
               />
               <Spacer20 />
 
               <Text style={styles.label}>Promotion Ends</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Choose Date"
+                placeholder="16-04-2025"
                 onChangeText={(text) => updateFormData("last_date", text)}
                 selectionColor="lightgrey"
+                value={formData.last_date}
               />
             </>
           )}
@@ -950,7 +982,7 @@ const EditProduct = () => {
             style={styles.submitButton}
             onPress={formSubmit}
           >
-            <Text style={styles.buttonText}>Add Product</Text>
+            <Text style={styles.buttonText}>Save Changes</Text>
           </Button>
         </View>
       </ScrollView>
@@ -1095,7 +1127,8 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: 10,
-    backgroundColor: Colors.colors.primary,
+    borderColor: Colors.colors.primary,
+    borderWidth: 1,
     borderRadius: 8,
   },
   submitButton: {
@@ -1104,7 +1137,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: "white",
+    color: Colors.colors.card,
     fontSize: 16,
   },
   checkboxContainer: {

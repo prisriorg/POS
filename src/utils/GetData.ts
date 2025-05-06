@@ -73,6 +73,32 @@ export const suppliers = [
   },
 ];
 
+export const paymentMethods = [
+
+  {
+    id: 1,
+    label: "Cash",
+    value: "1",
+  },
+  {
+    id: 2,
+    label: "Gift Card",
+    value: "2",
+  },
+  {
+    id: 3,
+    label: "Credit Card",
+    value: "3",
+  },
+  {
+    id: 4,
+    label: "Cheque",
+    value: "4",
+  }
+
+  
+];
+
 export const purchaseStatus = [
   {
     id: 1,
@@ -176,9 +202,9 @@ export const salesPayemnt= [
     value: "2",
   },
   {
-    id: 3,
+    id: 4,
     label: "Returned",
-    value: "3",
+    value: "4",
   },
 ]
 
@@ -191,3 +217,8 @@ export const customerGroup = [
     value: "1",
   },
 ];
+
+
+
+// "@linvix-sistemas/react-native-bluetooth-printer": "^1.3.0",
+// "@linvix-sistemas/react-native-escpos-buffer": "^1.3.6",

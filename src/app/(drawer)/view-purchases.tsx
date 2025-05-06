@@ -153,6 +153,7 @@ const ViewPurchases = () => {
         <Spacer10 />
         <Divider />
         {purData?.product_purchase_data?.map((data) => {
+
           return (
             <View
               style={{

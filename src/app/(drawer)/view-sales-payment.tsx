@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
 } from "react-native";
 import React, { useCallback } from "react";
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -15,7 +14,7 @@ import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
 import { BASE_URL } from "@/src/utils/config";
 
-const ViewPayment = () => {
+const ViewSalesPayment = () => {
   const router = useRouter();
   const visualFeedback = useVisualFeedback();
   const { user, domain } = useAppSelector((state) => state.auth);
@@ -40,7 +39,7 @@ const ViewPayment = () => {
       visualFeedback.showLoadingBackdrop();
       // Fetch product details from API using the id
       await fetch(
-        `${BASE_URL}purchase/${id}?user_id=${user?.id}&tenant_id=${domain}`
+        `${BASE_URL}sale/${id}?user_id=${user?.id}&tenant_id=${domain}`
       )
         .then((response) => response.json())
         .then((data) => {
@@ -130,7 +129,7 @@ const ViewPayment = () => {
             return (
               <Pressable
                 onPress={() => {
-                  router.replace("/(drawer)/products-inventory");
+                  router.replace("/(drawer)/sales");
                 }}
                 style={{
                   padding: 10,
@@ -172,7 +171,7 @@ const ViewPayment = () => {
   );
 };
 
-export default ViewPayment;
+export default ViewSalesPayment;
 
 const styles = StyleSheet.create({
   input: {

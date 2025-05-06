@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { Colors } from "@/src/constants/Colors";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import {
@@ -24,10 +24,16 @@ import {
   MaterialIcons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
-import { useAppSelector } from "@/src/store/reduxHook";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
 import { paymentStatus, purchaseStatus, suppliers } from "@/src/utils/GetData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setPurchases } from "@/src/store/reducers/homeReducer";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
+
+import NetInfo from "@react-native-community/netinfo";
+import { BASE_URL } from "@/src/utils/config";
 
 interface Purchase {
   id: number;
@@ -67,25 +73,26 @@ const AllPurchases = () => {
 
     if (filter.warehoues) {
       filtered = filtered.filter(
-        (product: any) => product.warehouse_id === filter.warehoues
+        (product: any) => product.warehouse_id === Number(filter.warehoues)
       );
     }
 
     if (filter.suppliers) {
       filtered = filtered.filter(
-        (product: any) => product.supplier_id === filter.suppliers
+        (product: any) => product.supplier_id === Number(filter.suppliers)
       );
     }
 
     if (filter.status) {
       filtered = filtered.filter(
-        (product: any) => product.status === filter.status
+        (product: any) => product.status === Number(filter.status)
       );
     }
 
     if (filter.paymentStatus) {
       filtered = filtered.filter(
-        (product: any) => product.payment_status === filter.paymentStatus
+        (product: any) =>
+          product.payment_status === Number(filter.paymentStatus)
       );
     }
 
@@ -93,6 +100,54 @@ const AllPurchases = () => {
     setShowFilter(false);
   };
 
+  const { user, domain } = useAppSelector((state) => state.auth);
+  const visualFeedback = useVisualFeedback();
+  const dispatch = useAppDispatch();
+
+  const getPurchases = async () => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const purchases = await AsyncStorage.getItem("getPurchases");
+      if (purchases) {
+        dispatch(setPurchases(JSON.parse(purchases)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const response = await fetch(
+        `${BASE_URL}purchases?user_id=${user?.id}&tenant_id=${domain}&length=15&start=0`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setPurchases(result?.purchases));
+          await AsyncStorage.setItem(
+            "getPurchases",
+            JSON.stringify(result?.purchases)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
+  useFocusEffect(
+    useCallback(() => {
+      getPurchases();
+      return () => {
+        // Any cleanup code here
+      };
+    }, [user?.id, domain])
+  );
   React.useEffect(() => {
     setFilteredExpenses(purchases);
   }, [purchases]);
@@ -143,7 +198,7 @@ const AllPurchases = () => {
                   />
                 </Pressable>
               }
-              style={{
+              contentStyle={{
                 backgroundColor: "#fff",
               }}
             >
@@ -163,7 +218,11 @@ const AllPurchases = () => {
               <Divider />
               <Menu.Item
                 onPress={() => {
-                  router.replace(`/(drawer)/add-payment?id=${item.id}`);
+                  router.replace(
+                    `/(drawer)/add-payment?id=${item.id}&due=${(
+                      item.grand_total - item.paid_amount
+                    ).toFixed(2)}&paid=${item.paid_amount}`
+                  );
                   setOpenMenuId(null);
                 }}
                 style={{
@@ -171,7 +230,7 @@ const AllPurchases = () => {
                 }}
                 title="Add Payment"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                  <MaterialIcons name="add" size={20} color={prms.color} />
                 )}
               />
               <Divider />
@@ -185,7 +244,11 @@ const AllPurchases = () => {
                 }}
                 title="View Payment"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
+                  <MaterialIcons
+                    name="content-paste"
+                    size={20}
+                    color={prms.color}
+                  />
                 )}
               />
               <Divider />
@@ -198,9 +261,9 @@ const AllPurchases = () => {
                 style={{
                   backgroundColor: "#fff",
                 }}
-                title="Details"
+                title="Delete"
                 leadingIcon={(prms) => (
-                  <MaterialIcons name="info" size={20} color={prms.color} />
+                  <MaterialIcons name="delete" size={20} color={prms.color} />
                 )}
               />
             </Menu>
@@ -211,7 +274,9 @@ const AllPurchases = () => {
           <View>
             <View style={styles.row}>
               <Text style={styles.label}>Grand Total</Text>
-              <Text style={styles.value}>{item.grand_total}</Text>
+              <Text style={styles.value}>
+                {Number(item.grand_total).toFixed(2)}
+              </Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Amount Paid</Text>
@@ -430,7 +495,8 @@ const AllPurchases = () => {
                   >
                     <Text
                       style={{
-                        color: filter.status === brand.value ?  "#fff" : "#666565",
+                        color:
+                          filter.status === brand.value ? "#fff" : "#666565",
                       }}
                     >
                       {brand.label}
@@ -466,7 +532,8 @@ const AllPurchases = () => {
                       style={{
                         color:
                           filter.paymentStatus === brand.value
-                            ? "#fff" : "#666565",
+                            ? "#fff"
+                            : "#666565",
                       }}
                     >
                       {brand.label}
@@ -478,15 +545,19 @@ const AllPurchases = () => {
             <Spacer20 />
             <Text style={styles.filterTitle}>Warehouse</Text>
             <Dropdown
-              data={warehouses}
+              data={warehouses.map((item) => ({
+                id: item.id,
+                name: item.name,
+                value: item.id,
+              }))}
               labelField="name"
-              valueField="id"
+              valueField="value"
               value={filter.warehoues}
               placeholder="Select Warehouse"
               onChange={(item) => {
                 setFilter((prev) => ({
                   ...prev,
-                  warehoues: item.id,
+                  warehoues: item.value,
                 }));
               }}
               style={{

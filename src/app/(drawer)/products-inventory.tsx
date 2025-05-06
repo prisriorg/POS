@@ -105,34 +105,27 @@ const ProductsInventoryScreen = () => {
     let filtered = products;
 
     if (filter.category) {
-      const category = categories.find(
-        (cat: any) => cat.name === filter.category
-      )?.id;
-      if (category) {
-        filtered = filtered.filter(
-          (product: any) => product.category_id === category
-        );
-      }
+      filtered = filtered.filter(
+        (product: any) =>
+          Number(product.category_id) === Number(filter.category)
+      );
     }
 
     if (filter.brand) {
-      const brand_id = categories.find(
-        (bran: any) => bran.title === filter.brand
-      )?.id;
       filtered = filtered.filter(
-        (product: any) => product.brand_id === brand_id
+        (product: any) => Number(product.brand_id) === Number(filter.brand)
       );
     }
 
     if (filter.stock) {
       if (filter.stock === "In Stock") {
-        filtered = filtered.filter((product: any) => product.qty > 0);
+        filtered = filtered.filter((product: any) => Number(product.quantity) > 0);
       } else if (filter.stock === "Low Stock") {
         filtered = filtered.filter(
-          (product: any) => product.qty > 0 && product.qty <= 10
+          (product: any) => Number(product.quantity) > 0 && Number(product.quantity) <= 10
         );
       } else if (filter.stock === "Out of Stock") {
-        filtered = filtered.filter((product: any) => product.qty <= 0);
+        filtered = filtered.filter((product: any) => Number(product.quantity) <= 0);
       }
     }
 
@@ -187,7 +180,7 @@ const ProductsInventoryScreen = () => {
       name: string;
       image: string;
       price: number;
-      qty: number;
+      quantity: number;
       code: string;
       hs_code: string;
     };
@@ -258,7 +251,7 @@ const ProductsInventoryScreen = () => {
                 fontSize: 14,
               }}
             >
-              In Stock: {item.qty}
+              In Stock: {item.quantity}
             </Text>
 
             <View
@@ -335,6 +328,7 @@ const ProductsInventoryScreen = () => {
       </Pressable>
     );
   };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -479,14 +473,14 @@ const ProductsInventoryScreen = () => {
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
-                        category: category.name,
+                        category: category.id,
                       }));
                     }}
                     style={[
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.category === category.name
+                          filter.category === category.id
                             ? Colors.colors.primary
                             : "#dedede",
                       },
@@ -495,9 +489,7 @@ const ProductsInventoryScreen = () => {
                     <Text
                       style={{
                         color:
-                          filter.category === category.name
-                            ? "#fff"
-                            : "#666565",
+                          filter.category === category.id ? "#fff" : "#666565",
                       }}
                     >
                       {category.name}
@@ -516,14 +508,14 @@ const ProductsInventoryScreen = () => {
                     onPress={() => {
                       setFilter((prev) => ({
                         ...prev,
-                        brand: brand.title,
+                        brand: brand.id,
                       }));
                     }}
                     style={[
                       styles.chip,
                       {
                         backgroundColor:
-                          filter.brand === brand.title
+                          filter.brand === brand.id
                             ? Colors.colors.primary
                             : "#dedede",
                       },
@@ -531,8 +523,7 @@ const ProductsInventoryScreen = () => {
                   >
                     <Text
                       style={{
-                        color:
-                          filter.brand === brand.title ? "#fff" : "#666565",
+                        color: filter.brand === brand.id ? "#fff" : "#666565",
                       }}
                     >
                       {brand.title}

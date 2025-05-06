@@ -86,7 +86,7 @@ const ViewProduct = () => {
   const handleDelete = async () => {
     try {
       const response = await fetch(
-        `${BASE_URL}product/delete/${deleteData}?user_id=${user?.id}&tenant_id=${domain}`,
+        `${BASE_URL}product/delete/${prms?.id}?user_id=${user?.id}&tenant_id=${domain}`,
         {
           method: "DELETE",
           headers: {
@@ -98,8 +98,9 @@ const ViewProduct = () => {
       const data = await response.json();
       if (response.ok) {
         console.log("Product deleted successfully:", data);
-        getAllProducts();
+        // getAllProducts();
         Alert.alert("Success", "Product deleted successfully");
+        router.replace("/(drawer)/products-inventory");
       } else {
         console.log("Error deleting product:", data.message);
       }
@@ -189,12 +190,12 @@ const ViewProduct = () => {
             <Text style={styles.productName}>{productData?.name || "NA"}</Text>
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Buying Price:</Text>
-              <Text style={styles.priceValue}>{productData?.cost}</Text>
+              <Text style={styles.priceValue}>${productData?.cost}</Text>
             </View>
 
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Selling Price:</Text>
-              <Text style={styles.priceValue}>{productData?.price}</Text>
+              <Text style={styles.priceValue}>${productData?.price}</Text>
             </View>
           </View>
         </View>
@@ -226,8 +227,10 @@ const ViewProduct = () => {
             <View style={styles.input}>
               <Text style={styles.value}>
                 {(brands &&
-                  brands.find((pro: any) => pro?.id === productData?.brand_id)
-                    ?.title) ||
+                  brands.find(
+                    (pro: any) =>
+                      Number(pro?.id) === Number(productData?.brand_id)
+                  )?.title) ||
                   "NA"}
               </Text>
             </View>
@@ -239,7 +242,8 @@ const ViewProduct = () => {
               <Text style={styles.value}>
                 {(categories &&
                   categories.find(
-                    (pro: any) => pro?.id === productData?.brand_id
+                    (pro: any) =>
+                      Number(pro?.id) === Number(productData?.category_id)
                   )?.name) ||
                   "NA"}
               </Text>
@@ -260,8 +264,10 @@ const ViewProduct = () => {
             <View style={styles.input}>
               <Text style={styles.value}>
                 {
-                  taxes.find((pro: any) => pro?.id === productData?.tax_id)
-                    ?.name
+                  taxes.find(
+                    (pro: any) =>
+                      Number(pro?.id) === Number(productData?.tax_id)
+                  )?.name
                 }
               </Text>
             </View>
@@ -279,6 +285,16 @@ const ViewProduct = () => {
               </Text>
             </View>
           </View>
+          {productData?.product_details && (
+            <View style={styles.inputField}>
+              <Text style={styles.label}>Description</Text>
+              <View style={styles.input}>
+                <Text style={styles.value}>
+                  {productData?.product_details}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* <View style={styles.sectionContainer}>

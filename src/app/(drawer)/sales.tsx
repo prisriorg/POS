@@ -9,15 +9,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AntDesign,
+  FontAwesome5,
   MaterialCommunityIcons,
   MaterialIcons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
+
+import CalendarPicker from "react-native-calendar-picker";
 import { Spacer10, Spacer20 } from "@/src/utils/Spacing";
 import { useRouter } from "expo-router";
+import NetInfo from "@react-native-community/netinfo";
 import {
   Button,
   Chip,
@@ -26,7 +30,12 @@ import {
   Menu,
   Searchbar,
 } from "react-native-paper";
-import { useAppSelector } from "@/src/store/reduxHook";
+import DateTimePicker, {
+  DateType,
+  useDefaultStyles,
+} from "react-native-ui-datepicker";
+
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHook";
 import {
   expenseCat,
   paymentStatusSales,
@@ -36,6 +45,10 @@ import {
 } from "@/src/utils/GetData";
 import { Colors } from "@/src/constants/Colors";
 import { Dropdown } from "react-native-element-dropdown";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
+import { BASE_URL } from "@/src/utils/config";
+import { setSales } from "@/src/store/reducers/homeReducer";
 
 interface Expense {
   biller_id: number;
@@ -87,70 +100,169 @@ interface Expense {
 const AllSales = () => {
   const router = useRouter();
   const [showFilter, setShowFilter] = React.useState(false);
-  const { sales, warehouses, currencies } = useAppSelector(
+  const { sales, warehouses, currencies, billers } = useAppSelector(
     (state) => state.home
   );
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filteredExpenses, setFilteredExpenses] = React.useState<Expense[]>([]);
-
+  const defaultStyles = useDefaultStyles();
+  const [range, setRange] = useState<{
+    startDate: DateType;
+    endDate: DateType;
+  }>({ startDate: undefined, endDate: undefined });
   const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
   const [filter, setFilter] = React.useState<{
     category: string;
+    currency_id: string;
     date: string;
+    end: string;
     warehoues: string;
     sale: number | null;
     payment: number | null;
+    biller_id: number | null;
   }>({
     category: "",
     date: new Date().toISOString().split("T")[0],
     warehoues: "",
+    end: new Date().toISOString().split("T")[0],
     sale: 0,
     payment: 0,
+    currency_id: "",
+    biller_id: null,
   });
+
+  const { user, domain } = useAppSelector((state) => state.auth);
+  const visualFeedback = useVisualFeedback();
+  const dispatch = useAppDispatch();
 
   React.useEffect(() => {
     setFilteredExpenses(sales);
   }, [sales]);
 
   const applyFilters = () => {
-    let filtered = sales;
-
-    if (filter.category) {
-      const category = expenseCat.find(
-        (cat: any) => cat.name === filter.category
-      )?.id;
-      if (category) {
-        filtered = filtered.filter(
-          (product: any) => product.category_id === category
-        );
-      }
+    let getDt = {};
+    if (filter.date) {
+      getDt = {
+        start_date: new Date(filter.date).toISOString().split("T")[0],
+      };
     }
-
-    // if (filter.date) {
-    //   const date = new Date(filter.date).toISOString().split("T")[0];
-    //   filtered = filtered.filter((product: any) =>
-    //     product.created_at.startsWith(date)
-    //   );
-    // }
-
+    if (filter.end) {
+      getDt = {
+        ...getDt,
+        end_date: new Date(filter.end).toISOString().split("T")[0],
+      };
+    }
     if (filter.warehoues) {
-      filtered = filtered.filter(
-        (product: any) => product.warehouse_id === filter.warehoues
-      );
+      getDt = {
+        ...getDt,
+        warehouse_id: filter.warehoues as unknown as number,
+      };
+    }
+    if (filter.sale) {
+      getDt = {
+        ...getDt,
+        sale_status: filter.sale,
+      };
+    }
+    if (filter.payment) {
+      getDt = {
+        ...getDt,
+        payment_status: filter.payment,
+      };
+    }
+    if (filter.category) {
+      getDt = {
+        ...getDt,
+        category_id: filter.category,
+      };
+    }
+    if (filter.biller_id) {
+      getDt = {
+        ...getDt,
+        biller_id: filter.biller_id,
+      };
     }
 
-    setFilteredExpenses(filtered);
+    getSales(getDt);
+    // setFilteredExpenses(sales);
     setShowFilter(false);
   };
+
+  const getSales = async ({
+    start = 0,
+    length = 10,
+    warehouse_id,
+    sale_status,
+    payment_status,
+    start_date,
+    end_date,
+    currency_id,
+    biller_id,
+  }: {
+    start?: number;
+    length?: number;
+    warehouse_id?: number;
+    sale_status?: number;
+    payment_status?: number;
+    start_date?: string;
+    end_date?: string;
+    currency_id?: number;
+    biller_id?: number;
+  }) => {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      const currencies = await AsyncStorage.getItem("getSales");
+      if (currencies) {
+        dispatch(setSales(JSON.parse(currencies)));
+      }
+      return;
+    }
+    try {
+      visualFeedback.showLoadingBackdrop();
+      const url = new URL(`${BASE_URL}sales`);
+      url.searchParams.append("user_id", user?.id || "");
+      url.searchParams.append("tenant_id", domain || "");
+      if (start) url.searchParams.append("start", start.toString());
+      if (length) url.searchParams.append("length", length.toString());
+
+      if (warehouse_id)
+        url.searchParams.append("warehouse_id", warehouse_id.toString());
+      if (sale_status)
+        url.searchParams.append("sale_status", sale_status.toString());
+      if (payment_status)
+        url.searchParams.append("payment_status", payment_status.toString());
+      if (start_date) url.searchParams.append("start_date", start_date);
+      if (end_date) url.searchParams.append("end_date", end_date);
+      if (currency_id)
+        url.searchParams.append("currency_id", currency_id.toString());
+      if (biller_id) url.searchParams.append("biller_id", biller_id.toString());
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+      });
+      const result = await response.json();
+      if (result && response.status === 200) {
+        if (result.status === "success") {
+          dispatch(setSales(result?.sales));
+          await AsyncStorage.setItem(
+            "getSales",
+            JSON.stringify(result?.currencies)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      visualFeedback.hideLoadingBackdrop();
+    }
+  };
+
   const renderExpenseItem = ({ item }: { item: Expense }) => {
     const isMenuOpen = openMenuId === item.id;
     return (
       <Pressable
         onPress={() => {
-          router.push({
-            pathname: "/(drawer)/details-sales",
-            params: { id: item.id },
-          });
+          router.push(`/(drawer)/details-sales?id=${item.id}`);
         }}
       >
         <View style={styles.card}>
@@ -185,23 +297,59 @@ const AllSales = () => {
                   />
                 </Pressable>
               }
-              style={{
+              contentStyle={{
                 backgroundColor: "#fff",
               }}
             >
               <Menu.Item
                 onPress={() => {
-                  router.push("/(drawer)/s-add-payment");
+                  router.replace(`/(drawer)/print?id=${item.id}`);
                   setOpenMenuId(null);
                 }}
-                title="Edit Payment"
-                leadingIcon={(prms) => (
-                  <MaterialIcons name="edit" size={20} color={prms.color} />
-                )}
                 style={{
                   backgroundColor: "#fff",
                 }}
+                title="Generate Receipt"
+                leadingIcon={(prms) => (
+                  <FontAwesome5 name="edit" size={20} color={prms.color} />
+                )}
               />
+              <Menu.Item
+                onPress={() => {
+                  router.replace(
+                    `/(drawer)/add-sale-payment?id=${item.id}&due=${(
+                      item.grand_total - item.paid_amount
+                    ).toFixed(2)}&paid=${item.paid_amount}`
+                  );
+                  setOpenMenuId(null);
+                }}
+                style={{
+                  backgroundColor: "#fff",
+                }}
+                title="Add Payment"
+                leadingIcon={(prms) => (
+                  <MaterialIcons name="add" size={24} color={prms.color} />
+                )}
+              />
+              <Divider />
+              <Menu.Item
+                onPress={() => {
+                  router.replace(`/(drawer)/view-sales-payment?id=${item.id}`);
+                  setOpenMenuId(null);
+                }}
+                style={{
+                  backgroundColor: "#fff",
+                }}
+                title="View Payment"
+                leadingIcon={(prms) => (
+                  <MaterialIcons
+                    name="content-paste"
+                    size={20}
+                    color={prms.color}
+                  />
+                )}
+              />
+              <Divider />
             </Menu>
           </View>
           <Divider />
@@ -224,6 +372,14 @@ const AllSales = () => {
                 {(item.grand_total - item.paid_amount).toFixed(2) || "NA"}
               </Text>
             </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Currency:</Text>
+              <Text style={styles.value}>
+                {currencies.find((cur) => cur.id === item.currency_id)?.name ||
+                  "NA"}
+              </Text>
+            </View>
+
             <Spacer10 />
             <View style={styles.row}>
               <View
@@ -285,52 +441,6 @@ const AllSales = () => {
     );
   };
 
-  const ddd = {
-    biller_id: 3,
-    cash_register_id: 14,
-    coupon_discount: null,
-    coupon_id: null,
-    created_at: "2025-04-23 06:51:00",
-    currency_id: 1,
-    customer_id: 3,
-    data: null,
-    device_signature: null,
-    document: null,
-    exchange_rate: 1,
-    fdms_signature: null,
-    fiscal_day_no: null,
-    global_no: null,
-    grand_total: 3.5,
-    hash: null,
-    id: 403,
-    item: 1,
-    order_discount: 0,
-    order_discount_type: "Flat",
-    order_discount_value: null,
-    order_tax: 0,
-    order_tax_rate: 0,
-    paid_amount: 3.5,
-    payment_status: 4,
-    posted: null,
-    prev_hash: null,
-    queue: null,
-    receipt_no: null,
-    reference_no: "posr-1745383925.2682-yP",
-    sale_note: "polikjhgbvc",
-    sale_status: 1,
-    shipping_cost: 0,
-    staff_note: null,
-    table_id: null,
-    thumbprint: null,
-    total_discount: 0,
-    total_price: 3.5,
-    total_qty: 1,
-    total_tax: 0,
-    updated_at: "2025-04-23 06:52:05",
-    user_id: 1,
-    validation_error_codes: null,
-    warehouse_id: 1,
-  };
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -426,7 +536,7 @@ const AllSales = () => {
               color: "#000",
             }}
           >
-            No Expense found
+            No Sales found
           </Text>
         )}
         <Spacer20 />
@@ -450,10 +560,13 @@ const AllSales = () => {
                 onPress={() => {
                   setFilter({
                     category: "",
-                    date: new Date().toISOString().split("T")[0],
+                    date: "",
                     warehoues: "",
                     sale: 0,
+                    end: "",
                     payment: 0,
+                    biller_id: null,
+                    currency_id: "",
                   });
                 }}
               >
@@ -559,15 +672,19 @@ const AllSales = () => {
 
               <Text style={styles.filterTitle}>Branch</Text>
               <Dropdown
-                data={warehouses}
+                data={billers.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  value: item.id,
+                }))}
                 labelField="name"
                 valueField="id"
-                value={filter.warehoues}
+                value={filter.biller_id}
                 placeholder="Select Branch"
                 onChange={(item) => {
                   setFilter((prev) => ({
                     ...prev,
-                    warehoues: item.id,
+                    biller_id: item.value as unknown as number,
                   }));
                 }}
                 style={{
@@ -584,12 +701,12 @@ const AllSales = () => {
                 data={currencies}
                 labelField="name"
                 valueField="id"
-                value={filter.warehoues}
+                value={filter.currency_id}
                 placeholder="Select Currency"
                 onChange={(item) => {
                   setFilter((prev) => ({
                     ...prev,
-                    warehoues: item.id,
+                    currency_id: item.id,
                   }));
                 }}
                 style={{
@@ -601,7 +718,22 @@ const AllSales = () => {
                   marginBottom: 10,
                 }}
               ></Dropdown>
+
               <Text style={styles.filterTitle}>Date</Text>
+
+              <CalendarPicker
+                startFromMonday={true}
+                allowRangeSelection={true}
+                // minDate={minDate}
+                // maxDate={maxDate}
+                todayBackgroundColor="#f2e6ff"
+                selectedDayColor="#7300e6"
+                selectedDayTextColor="#FFFFFF"
+                onDateChange={(date, type) => {
+                  console.log("Date changed", date, type);
+                }}
+              />
+
               <TextInput
                 placeholder="Select Date"
                 onChangeText={(val) => {

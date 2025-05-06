@@ -23,14 +23,14 @@ import { BASE_URL } from "@/src/utils/config";
 import useVisualFeedback from "@/src/hooks/VisualFeedback/useVisualFeedback";
 import { useAppSelector } from "@/src/store/reduxHook";
 
-const AddSalesPayment = () => {
+const AddPayment = () => {
   const router = useRouter();
 
   const prams = useLocalSearchParams();
   const visualFeedback = useVisualFeedback();
   const { user, domain } = useAppSelector((state) => state.auth);
   const [formData, setFormData] = React.useState({
-    purchase_id: prams?.id,
+    sale_id: prams?.id,
     amount: prams?.due,
     paying_amount: prams?.due,
     paid_by_id: '',
@@ -45,7 +45,7 @@ const AddSalesPayment = () => {
   useFocusEffect(
     useCallback(() => {
       console.log("prams", prams);
-      updateFormData("purchase_id", prams?.id);
+      updateFormData("sale_id", prams?.id);
       updateFormData("amount", prams?.due);
       updateFormData("paying_amount", prams?.due);
       return () => {
@@ -58,7 +58,7 @@ const AddSalesPayment = () => {
     try {
       visualFeedback.showLoadingBackdrop();
 
-      const apiUrl = `${BASE_URL}add-payment/purchase?user_id=${user.id}&tenant_id=${domain}`;
+      const apiUrl = `${BASE_URL}add-payment/sale?user_id=${user.id}&tenant_id=${domain}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -104,7 +104,7 @@ const AddSalesPayment = () => {
             return (
               <Pressable
                 onPress={() => {
-                  router.replace("/(drawer)/products-inventory");
+                  router.replace("/(drawer)/sales");
                 }}
                 style={{
                   padding: 10,
@@ -237,7 +237,7 @@ const AddSalesPayment = () => {
   );
 };
 
-export default AddSalesPayment;
+export default AddPayment;
 
 const styles = StyleSheet.create({
   input: {
